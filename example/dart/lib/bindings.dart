@@ -265,22 +265,58 @@ class Api {
     _deallocate(pointer.cast(), byteCount, alignment);
   }
 
-  /// Prints a friendly greeting to stdout.
-  void helloWorld() {
-    _helloWorld();
-    return;
+  OurStruct createS(
+    int x,
+    int y,
+  ) {
+    final tmp0 = x;
+    final tmp2 = y;
+    var tmp1 = 0;
+    var tmp3 = 0;
+    tmp1 = tmp0;
+    tmp3 = tmp2;
+    final tmp4 = _createS(
+      tmp1,
+      tmp3,
+    );
+    final tmp6 = tmp4;
+    final ffi.Pointer<ffi.Void> tmp6_0 = ffi.Pointer.fromAddress(tmp6);
+    final tmp6_1 = _Box(this, tmp6_0, "drop_box_OurStruct");
+    tmp6_1._finalizer = this._registerFinalizer(tmp6_1);
+    final tmp5 = OurStruct._(this, tmp6_1);
+    return tmp5;
   }
 
-  /// Returns a future that prints a friendly
-  /// greeting to stdout.
-  Future<int> asyncHelloWorld() {
-    final tmp0 = _asyncHelloWorld();
+  OurStructList newStructList() {
+    final tmp0 = _newStructList();
     final tmp2 = tmp0;
     final ffi.Pointer<ffi.Void> tmp2_0 = ffi.Pointer.fromAddress(tmp2);
-    final tmp2_1 = _Box(this, tmp2_0, "__async_hello_world_future_drop");
+    final tmp2_1 = _Box(this, tmp2_0, "drop_box_OurStructList");
     tmp2_1._finalizer = this._registerFinalizer(tmp2_1);
-    final tmp1 = _nativeFuture(tmp2_1, this.__asyncHelloWorldFuturePoll);
+    final tmp1 = OurStructList._(this, tmp2_1);
     return tmp1;
+  }
+
+  OurStructList createSs() {
+    final tmp0 = _createSs();
+    final tmp2 = tmp0;
+    final ffi.Pointer<ffi.Void> tmp2_0 = ffi.Pointer.fromAddress(tmp2);
+    final tmp2_1 = _Box(this, tmp2_0, "drop_box_OurStructList");
+    tmp2_1._finalizer = this._registerFinalizer(tmp2_1);
+    final tmp1 = OurStructList._(this, tmp2_1);
+    return tmp1;
+  }
+
+  void printSs(
+    OurStructList ss,
+  ) {
+    final tmp0 = ss;
+    var tmp1 = 0;
+    tmp1 = tmp0._box.move();
+    _printSs(
+      tmp1,
+    );
+    return;
   }
 
   late final _allocatePtr = _lookup<
@@ -298,85 +334,166 @@ class Api {
   late final _deallocate = _deallocatePtr
       .asFunction<void Function(ffi.Pointer<ffi.Uint8>, int, int)>();
 
-  int? __asyncHelloWorldFuturePoll(
-    int boxed,
-    int postCobject,
-    int port,
-  ) {
-    final tmp0 = boxed;
-    final tmp2 = postCobject;
-    final tmp4 = port;
-    var tmp1 = 0;
-    var tmp3 = 0;
-    var tmp5 = 0;
-    tmp1 = tmp0;
-    tmp3 = tmp2;
-    tmp5 = tmp4;
-    final tmp6 = _asyncHelloWorldFuturePoll(
-      tmp1,
-      tmp3,
-      tmp5,
-    );
-    final tmp8 = tmp6.arg0;
-    final tmp9 = tmp6.arg1;
-    final tmp10 = tmp6.arg2;
-    final tmp11 = tmp6.arg3;
-    final tmp12 = tmp6.arg4;
-    final tmp13 = tmp6.arg5;
-    if (tmp8 == 0) {
-      return null;
-    }
-    if (tmp9 == 0) {
-      final ffi.Pointer<ffi.Uint8> tmp10_0 = ffi.Pointer.fromAddress(tmp10);
-      final tmp9_0 = utf8.decode(tmp10_0.asTypedList(tmp11));
-      if (tmp11 > 0) {
-        final ffi.Pointer<ffi.Void> tmp10_0;
-        tmp10_0 = ffi.Pointer.fromAddress(tmp10);
-        this.__deallocate(tmp10_0, tmp12, 1);
-      }
-      throw tmp9_0;
-    }
-    final tmp7 = tmp13;
-    return tmp7;
-  }
-
-  late final _helloWorldPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function()>>("__hello_world");
-
-  late final _helloWorld = _helloWorldPtr.asFunction<void Function()>();
-  late final _asyncHelloWorldPtr =
-      _lookup<ffi.NativeFunction<ffi.Int64 Function()>>("__async_hello_world");
-
-  late final _asyncHelloWorld =
-      _asyncHelloWorldPtr.asFunction<int Function()>();
-  late final _asyncHelloWorldFuturePollPtr = _lookup<
+  late final _createSPtr = _lookup<
       ffi.NativeFunction<
-          _AsyncHelloWorldFuturePollReturn Function(
-    ffi.Int64,
-    ffi.Int64,
-    ffi.Int64,
-  )>>("__async_hello_world_future_poll");
+          ffi.Int64 Function(
+    ffi.Uint32,
+    ffi.Uint32,
+  )>>("__create_s");
 
-  late final _asyncHelloWorldFuturePoll =
-      _asyncHelloWorldFuturePollPtr.asFunction<
-          _AsyncHelloWorldFuturePollReturn Function(
+  late final _createS = _createSPtr.asFunction<
+      int Function(
     int,
+    int,
+  )>();
+  late final _newStructListPtr =
+      _lookup<ffi.NativeFunction<ffi.Int64 Function()>>("__new_struct_list");
+
+  late final _newStructList = _newStructListPtr.asFunction<int Function()>();
+  late final _createSsPtr =
+      _lookup<ffi.NativeFunction<ffi.Int64 Function()>>("__create_ss");
+
+  late final _createSs = _createSsPtr.asFunction<int Function()>();
+  late final _printSsPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+    ffi.Int64,
+  )>>("__print_ss");
+
+  late final _printSs = _printSsPtr.asFunction<
+      void Function(
+    int,
+  )>();
+  late final _ourStructPrintPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+    ffi.Int64,
+  )>>("__OurStruct_print");
+
+  late final _ourStructPrint = _ourStructPrintPtr.asFunction<
+      void Function(
+    int,
+  )>();
+  late final _ourStructListAddPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+    ffi.Int64,
+    ffi.Int64,
+  )>>("__OurStructList_add");
+
+  late final _ourStructListAdd = _ourStructListAddPtr.asFunction<
+      void Function(
+    int,
+    int,
+  )>();
+  late final _ourStructListPrintPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+    ffi.Int64,
+  )>>("__OurStructList_print");
+
+  late final _ourStructListPrint = _ourStructListPrintPtr.asFunction<
+      void Function(
+    int,
+  )>();
+  late final _ourStructListGetPtr = _lookup<
+      ffi.NativeFunction<
+          _OurStructListGetReturn Function(
+    ffi.Int64,
+    ffi.Uint64,
+  )>>("__OurStructList_get");
+
+  late final _ourStructListGet = _ourStructListGetPtr.asFunction<
+      _OurStructListGetReturn Function(
     int,
     int,
   )>();
 }
 
-class _AsyncHelloWorldFuturePollReturn extends ffi.Struct {
+class OurStruct {
+  final Api _api;
+  final _Box _box;
+
+  OurStruct._(this._api, this._box);
+
+  void print() {
+    var tmp0 = 0;
+    tmp0 = _box.borrow();
+    _api._ourStructPrint(
+      tmp0,
+    );
+    return;
+  }
+
+  /// Manually drops the object and unregisters the FinalizableHandle.
+  void drop() {
+    _box.drop();
+  }
+}
+
+class OurStructList {
+  final Api _api;
+  final _Box _box;
+
+  OurStructList._(this._api, this._box);
+
+  void add(
+    OurStruct s,
+  ) {
+    final tmp1 = s;
+    var tmp0 = 0;
+    var tmp2 = 0;
+    tmp0 = _box.borrow();
+    tmp2 = tmp1._box.move();
+    _api._ourStructListAdd(
+      tmp0,
+      tmp2,
+    );
+    return;
+  }
+
+  void print() {
+    var tmp0 = 0;
+    tmp0 = _box.borrow();
+    _api._ourStructListPrint(
+      tmp0,
+    );
+    return;
+  }
+
+  OurStruct? get_(
+    int index,
+  ) {
+    final tmp1 = index;
+    var tmp0 = 0;
+    var tmp2 = 0;
+    tmp0 = _box.borrow();
+    tmp2 = tmp1;
+    final tmp3 = _api._ourStructListGet(
+      tmp0,
+      tmp2,
+    );
+    final tmp5 = tmp3.arg0;
+    final tmp6 = tmp3.arg1;
+    if (tmp5 == 0) {
+      return null;
+    }
+    final ffi.Pointer<ffi.Void> tmp6_0 = ffi.Pointer.fromAddress(tmp6);
+    final tmp6_1 = _Box(_api, tmp6_0, "drop_box_OurStruct");
+    tmp6_1._finalizer = _api._registerFinalizer(tmp6_1);
+    final tmp4 = OurStruct._(_api, tmp6_1);
+    return tmp4;
+  }
+
+  /// Manually drops the object and unregisters the FinalizableHandle.
+  void drop() {
+    _box.drop();
+  }
+}
+
+class _OurStructListGetReturn extends ffi.Struct {
   @ffi.Uint8()
   external int arg0;
-  @ffi.Uint8()
-  external int arg1;
   @ffi.Int64()
-  external int arg2;
-  @ffi.Uint64()
-  external int arg3;
-  @ffi.Uint64()
-  external int arg4;
-  @ffi.Uint8()
-  external int arg5;
+  external int arg1;
 }

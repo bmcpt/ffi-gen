@@ -213,67 +213,111 @@ export class Api {
     this.instance.exports[symbol](0, ptr);
   }
 
-  helloWorld() {
-    this.instance.exports.__hello_world();
-    return;
-  }
-  asyncHelloWorld() {
-    const tmp0 = this.instance.exports.__async_hello_world();
-    const tmp2 = tmp0;
-    const tmp2_0 = () => {
-      this.drop("__async_hello_world_future_drop", tmp2);
-    };
-    const tmp2_1 = new Box(tmp2, tmp2_0);
-    const tmp1 = nativeFuture(tmp2_1, (a, b, c) => {
-      return this.asyncHelloWorldFuturePoll(a, b, c);
-    });
-    return tmp1;
-  }
-  asyncHelloWorldFuturePoll(boxed, postCobject, port) {
-    const tmp0 = boxed;
-    const tmp2 = postCobject;
-    const tmp4 = port;
+  createS(x, y) {
+    const tmp0 = x;
+    const tmp2 = y;
     let tmp1 = 0;
     let tmp3 = 0;
-    let tmp5 = 0;
-    let tmp6 = 0;
     tmp1 = tmp0;
     tmp3 = tmp2;
-    const tmp5_0 = new BigInt64Array(1);
-    tmp5_0[0] = tmp4;
-    const tmp5_1 = new Uint32Array(tmp5_0.buffer);
-    tmp5 = tmp5_1[0];
-    tmp6 = tmp5_1[1];
-    const tmp7 = this.instance.exports.__async_hello_world_future_poll(
-      tmp1,
-      tmp3,
-      tmp5,
-      tmp6
-    );
-    const tmp9 = tmp7[0];
-    const tmp10 = tmp7[1];
-    const tmp11 = tmp7[2];
-    const tmp12 = tmp7[3];
-    const tmp13 = tmp7[4];
-    const tmp14 = tmp7[5];
-    if (tmp9 === 0) {
+    const tmp4 = this.instance.exports.__create_s(tmp1, tmp3);
+    const tmp6 = tmp4;
+    const tmp6_0 = () => {
+      this.drop("drop_box_OurStruct", tmp6);
+    };
+    const tmp6_1 = new Box(tmp6, tmp6_0);
+    const tmp5 = new OurStruct(this, tmp6_1);
+    return tmp5;
+  }
+  newStructList() {
+    const tmp0 = this.instance.exports.__new_struct_list();
+    const tmp2 = tmp0;
+    const tmp2_0 = () => {
+      this.drop("drop_box_OurStructList", tmp2);
+    };
+    const tmp2_1 = new Box(tmp2, tmp2_0);
+    const tmp1 = new OurStructList(this, tmp2_1);
+    return tmp1;
+  }
+  createSs() {
+    const tmp0 = this.instance.exports.__create_ss();
+    const tmp2 = tmp0;
+    const tmp2_0 = () => {
+      this.drop("drop_box_OurStructList", tmp2);
+    };
+    const tmp2_1 = new Box(tmp2, tmp2_0);
+    const tmp1 = new OurStructList(this, tmp2_1);
+    return tmp1;
+  }
+  printSs(ss) {
+    const tmp0 = ss;
+    let tmp1 = 0;
+    tmp1 = tmp0.box.move();
+    this.instance.exports.__print_ss(tmp1);
+    return;
+  }
+}
+
+export class OurStruct {
+  constructor(api, box) {
+    this.api = api;
+    this.box = box;
+  }
+
+  print() {
+    let tmp0 = 0;
+    tmp0 = this.box.borrow();
+    this.api.instance.exports.__OurStruct_print(tmp0);
+    return;
+  }
+
+  drop() {
+    this.box.drop();
+  }
+}
+export class OurStructList {
+  constructor(api, box) {
+    this.api = api;
+    this.box = box;
+  }
+
+  add(s) {
+    const tmp1 = s;
+    let tmp0 = 0;
+    let tmp2 = 0;
+    tmp0 = this.box.borrow();
+    tmp2 = tmp1.box.move();
+    this.api.instance.exports.__OurStructList_add(tmp0, tmp2);
+    return;
+  }
+  print() {
+    let tmp0 = 0;
+    tmp0 = this.box.borrow();
+    this.api.instance.exports.__OurStructList_print(tmp0);
+    return;
+  }
+  get(index) {
+    const tmp1 = index;
+    let tmp0 = 0;
+    let tmp2 = 0;
+    tmp0 = this.box.borrow();
+    tmp2 = tmp1;
+    const tmp3 = this.api.instance.exports.__OurStructList_get(tmp0, tmp2);
+    const tmp5 = tmp3[0];
+    const tmp6 = tmp3[1];
+    if (tmp5 === 0) {
       return null;
     }
-    if (tmp10 === 0) {
-      const tmp10_0 = new Uint8Array(
-        this.instance.exports.memory.buffer,
-        tmp11,
-        tmp12
-      );
-      const tmp10_1 = new TextDecoder();
-      const tmp10_2 = tmp10_1.decode(tmp10_0);
-      if (tmp12 > 0) {
-        this.deallocate(tmp11, tmp13, 1);
-      }
-      throw tmp10_2;
-    }
-    const tmp8 = tmp14;
-    return tmp8;
+    const tmp6_0 = () => {
+      this.api.drop("drop_box_OurStruct", tmp6);
+    };
+    const tmp6_1 = new Box(tmp6, tmp6_0);
+    const tmp4 = new OurStruct(this.api, tmp6_1);
+    return tmp4;
+  }
+
+  drop() {
+    this.box.drop();
   }
 }
 

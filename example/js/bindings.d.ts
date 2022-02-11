@@ -22,14 +22,26 @@ export class Api {
    */
   fetch(url, imports): Promise<void>;
 
-  /**
-   * Prints a friendly greeting to stdout.
-   */
-  helloWorld(): void;
+  createS(x: number, y: number): OurStruct;
 
-  /**
-   * Returns a future that prints a friendly
-   * greeting to stdout.
-   */
-  asyncHelloWorld(): Promise<number>;
+  newStructList(): OurStructList;
+
+  createSs(): OurStructList;
+
+  printSs(ss: OurStructList): void;
+}
+
+export class OurStruct {
+  print(): void;
+
+  drop(): void;
+}
+export class OurStructList {
+  add(s: OurStruct): void;
+
+  print(): void;
+
+  get(index: number): ?OurStruct;
+
+  drop(): void;
 }
