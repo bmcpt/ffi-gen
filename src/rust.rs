@@ -26,7 +26,7 @@ impl RustGenerator {
         };
         quote! {
         #[allow(unused)]
-        mod api {
+        pub mod api {
             use core::future::Future;
             use core::mem::ManuallyDrop;
             use core::pin::Pin;
@@ -66,6 +66,29 @@ impl RustGenerator {
             pub unsafe extern "C" fn deallocate(ptr: *mut u8, size: usize, align: usize) {
                 let layout = std::alloc::Layout::from_size_align_unchecked(size, align);
                 std::alloc::dealloc(ptr, layout);
+            }
+
+            pub struct FfiBuffer {
+                pub bytes: Vec<u8>,
+            }
+
+            #[no_mangle]
+            pub unsafe extern "C" fn __ffi_buffer_address(ptr: i64) -> i64 {
+                let buffer = &*(ptr as *mut FfiBuffer);
+                std::mem::transmute(buffer.bytes.as_ptr())
+            }
+
+            #[no_mangle]
+            pub unsafe extern "C" fn __ffi_buffer_size(ptr: i64) -> i64 {
+                let buffer = &*(ptr as *mut FfiBuffer);
+                std::mem::transmute(buffer.bytes.len())
+            }
+
+            #[no_mangle]
+            pub extern "C" fn drop_box_FfiBuffer(_: i64, boxed: i64) {
+                panic_abort(move || {
+                    unsafe { Box::<FfiBuffer>::from_raw(boxed as *mut _) };
+                });
             }
 
             #[repr(transparent)]
@@ -541,6 +564,7 @@ impl RustGenerator {
             AbiType::Future(ty) => quote!(impl Future<Output = #(self.ty(ty))>),
             AbiType::RefStream(ty) => quote!(&impl Stream<Item = #(self.ty(ty))>),
             AbiType::Stream(ty) => quote!(impl Stream<Item = #(self.ty(ty))>),
+            AbiType::Buffer => quote!(FfiBuffer),
         }
     }
 

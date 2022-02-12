@@ -1,70 +1,36 @@
-use std::ops::Deref;
-use futures::{Stream, StreamExt};
+mod bindings;
 
-ffi_gen_macro::ffi_gen!("example/api.rsh");
+use bindings::*;
+use std::io::Read;
 
-fn log(msg: &str) {
-    println!("{}", msg);
+const URL: &str = "https://file-examples-com.github.io/uploads/2017/10/file_example_JPG_1MB.jpg";
+
+fn get_image() -> api::FfiBuffer {
+    let mut bytes = vec![];
+    ureq::get(URL).call().unwrap().into_reader().take(u64::MAX).read_to_end(&mut bytes).unwrap();
+    api::FfiBuffer { bytes }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct OurStruct {
-    pub x: u32,
-    pub y: u32,
+const RF: &str = "/dev/random";
+
+struct DataTest {
+    bytes: Vec<u8>,
 }
 
-impl ToString for OurStruct {
-    fn to_string(&self) -> String {
-        format!("OurStruct({}, {})", self.x, self.y)
-    }
+fn create(n: usize) -> DataTest {
+    let mut bytes = Vec::with_capacity(n);
+    std::fs::File::open(RF).unwrap().take(n as u64).read_to_end(&mut bytes).unwrap();
+    DataTest { bytes }
 }
 
-impl OurStruct {
-    fn print(&self) {
-        log(&self.to_string());
-    }
-
-    fn get_x(&self) -> u32 {
-        self.x
-    }
-
-    fn get_y(&self) -> u32 {
-        self.y
-    }
-}
-
-pub fn create_s(x: u32, y: u32) -> OurStruct {
-    OurStruct { x, y }
-}
-
-pub struct OurStructList {
-    pub list: Vec<OurStruct>,
-}
-
-pub fn new_struct_list() -> OurStructList {
-    OurStructList { list: vec![] }
-}
-
-impl OurStructList {
-    pub fn add(&mut self, s: Box<OurStruct>) {
-        self.list.push(s.deref().clone());
+impl DataTest {
+    fn get_copy(&self) -> Vec<u8> {
+        self.bytes.clone()
     }
 
-    pub fn print(&self) {
-        for s in &self.list {
-            s.print();
+    fn get_shmem(&self) -> api::FfiBuffer {
+        api::FfiBuffer {
+            bytes: self.bytes.clone()
         }
     }
-
-    pub fn get(&self, index: usize) -> Option<&OurStruct> {
-        self.list.get(index)
-    }
-}
-
-pub fn print_ss(ss: Box<OurStructList>) {
-    ss.list.iter().for_each(|s| s.print());
-}
-
-pub fn create_ss() -> OurStructList {
-    OurStructList { list: (0..10).map(move |i| OurStruct { x: i, y: i }).collect::<Vec<_>>() }
 }

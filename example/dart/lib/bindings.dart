@@ -99,6 +99,24 @@ class _Box {
   }
 }
 
+class FfiBuffer {
+  final Api _api;
+  final _Box _box;
+
+  FfiBuffer._(this._api, this._box);
+
+  void drop() {
+    _box.drop();
+  }
+
+  Uint8List toUint8List() {
+    final buffer = _box.borrow();
+    final address = _api._ffiBufferAddress(buffer);
+    final size = _api._ffiBufferSize(buffer);
+    return address.asTypedList(size);
+  }
+}
+
 /// Implements Iterable and Iterator for a rust iterator.
 class Iter<T> extends Iterable<T> implements Iterator<T> {
   final _Box _box;
@@ -265,58 +283,32 @@ class Api {
     _deallocate(pointer.cast(), byteCount, alignment);
   }
 
-  OurStruct createS(
-    int x,
-    int y,
+  FfiBuffer getImage() {
+    final tmp0 = _getImage();
+    final tmp2 = tmp0;
+    final ffi.Pointer<ffi.Void> tmp2_0 = ffi.Pointer.fromAddress(tmp2);
+    final tmp2_1 = _Box(this, tmp2_0, "drop_box_FfiBuffer");
+    tmp2_1._finalizer = this._registerFinalizer(tmp2_1);
+    final tmp3 = FfiBuffer._(this, tmp2_1);
+    final tmp1 = tmp3;
+    return tmp1;
+  }
+
+  DataTest create(
+    int n,
   ) {
-    final tmp0 = x;
-    final tmp2 = y;
+    final tmp0 = n;
     var tmp1 = 0;
-    var tmp3 = 0;
     tmp1 = tmp0;
-    tmp3 = tmp2;
-    final tmp4 = _createS(
-      tmp1,
-      tmp3,
-    );
-    final tmp6 = tmp4;
-    final ffi.Pointer<ffi.Void> tmp6_0 = ffi.Pointer.fromAddress(tmp6);
-    final tmp6_1 = _Box(this, tmp6_0, "drop_box_OurStruct");
-    tmp6_1._finalizer = this._registerFinalizer(tmp6_1);
-    final tmp5 = OurStruct._(this, tmp6_1);
-    return tmp5;
-  }
-
-  OurStructList newStructList() {
-    final tmp0 = _newStructList();
-    final tmp2 = tmp0;
-    final ffi.Pointer<ffi.Void> tmp2_0 = ffi.Pointer.fromAddress(tmp2);
-    final tmp2_1 = _Box(this, tmp2_0, "drop_box_OurStructList");
-    tmp2_1._finalizer = this._registerFinalizer(tmp2_1);
-    final tmp1 = OurStructList._(this, tmp2_1);
-    return tmp1;
-  }
-
-  OurStructList createSs() {
-    final tmp0 = _createSs();
-    final tmp2 = tmp0;
-    final ffi.Pointer<ffi.Void> tmp2_0 = ffi.Pointer.fromAddress(tmp2);
-    final tmp2_1 = _Box(this, tmp2_0, "drop_box_OurStructList");
-    tmp2_1._finalizer = this._registerFinalizer(tmp2_1);
-    final tmp1 = OurStructList._(this, tmp2_1);
-    return tmp1;
-  }
-
-  void printSs(
-    OurStructList ss,
-  ) {
-    final tmp0 = ss;
-    var tmp1 = 0;
-    tmp1 = tmp0._box.move();
-    _printSs(
+    final tmp2 = _create(
       tmp1,
     );
-    return;
+    final tmp4 = tmp2;
+    final ffi.Pointer<ffi.Void> tmp4_0 = ffi.Pointer.fromAddress(tmp4);
+    final tmp4_1 = _Box(this, tmp4_0, "drop_box_DataTest");
+    tmp4_1._finalizer = this._registerFinalizer(tmp4_1);
+    final tmp3 = DataTest._(this, tmp4_1);
+    return tmp3;
   }
 
   late final _allocatePtr = _lookup<
@@ -334,155 +326,93 @@ class Api {
   late final _deallocate = _deallocatePtr
       .asFunction<void Function(ffi.Pointer<ffi.Uint8>, int, int)>();
 
-  late final _createSPtr = _lookup<
+  late final _ffiBufferAddressPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Uint8> Function(ffi.IntPtr)>>(
+          "__ffi_buffer_address");
+
+  late final _ffiBufferAddress =
+      _ffiBufferAddressPtr.asFunction<ffi.Pointer<ffi.Uint8> Function(int)>();
+
+  late final _ffiBufferSizePtr =
+      _lookup<ffi.NativeFunction<ffi.Int64 Function(ffi.IntPtr)>>(
+          "__ffi_buffer_size");
+
+  late final _ffiBufferSize = _ffiBufferSizePtr.asFunction<int Function(int)>();
+
+  late final _getImagePtr =
+      _lookup<ffi.NativeFunction<ffi.Int64 Function()>>("__get_image");
+
+  late final _getImage = _getImagePtr.asFunction<int Function()>();
+  late final _createPtr = _lookup<
       ffi.NativeFunction<
           ffi.Int64 Function(
-    ffi.Uint32,
-    ffi.Uint32,
-  )>>("__create_s");
+    ffi.Uint64,
+  )>>("__create");
 
-  late final _createS = _createSPtr.asFunction<
+  late final _create = _createPtr.asFunction<
       int Function(
     int,
+  )>();
+  late final _dataTestGetCopyPtr = _lookup<
+      ffi.NativeFunction<
+          _DataTestGetCopyReturn Function(
+    ffi.Int64,
+  )>>("__DataTest_get_copy");
+
+  late final _dataTestGetCopy = _dataTestGetCopyPtr.asFunction<
+      _DataTestGetCopyReturn Function(
     int,
   )>();
-  late final _newStructListPtr =
-      _lookup<ffi.NativeFunction<ffi.Int64 Function()>>("__new_struct_list");
-
-  late final _newStructList = _newStructListPtr.asFunction<int Function()>();
-  late final _createSsPtr =
-      _lookup<ffi.NativeFunction<ffi.Int64 Function()>>("__create_ss");
-
-  late final _createSs = _createSsPtr.asFunction<int Function()>();
-  late final _printSsPtr = _lookup<
+  late final _dataTestGetShmemPtr = _lookup<
       ffi.NativeFunction<
-          ffi.Void Function(
+          ffi.Int64 Function(
     ffi.Int64,
-  )>>("__print_ss");
+  )>>("__DataTest_get_shmem");
 
-  late final _printSs = _printSsPtr.asFunction<
-      void Function(
-    int,
-  )>();
-  late final _ourStructPrintPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(
-    ffi.Int64,
-  )>>("__OurStruct_print");
-
-  late final _ourStructPrint = _ourStructPrintPtr.asFunction<
-      void Function(
-    int,
-  )>();
-  late final _ourStructListAddPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(
-    ffi.Int64,
-    ffi.Int64,
-  )>>("__OurStructList_add");
-
-  late final _ourStructListAdd = _ourStructListAddPtr.asFunction<
-      void Function(
-    int,
-    int,
-  )>();
-  late final _ourStructListPrintPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(
-    ffi.Int64,
-  )>>("__OurStructList_print");
-
-  late final _ourStructListPrint = _ourStructListPrintPtr.asFunction<
-      void Function(
-    int,
-  )>();
-  late final _ourStructListGetPtr = _lookup<
-      ffi.NativeFunction<
-          _OurStructListGetReturn Function(
-    ffi.Int64,
-    ffi.Uint64,
-  )>>("__OurStructList_get");
-
-  late final _ourStructListGet = _ourStructListGetPtr.asFunction<
-      _OurStructListGetReturn Function(
-    int,
+  late final _dataTestGetShmem = _dataTestGetShmemPtr.asFunction<
+      int Function(
     int,
   )>();
 }
 
-class OurStruct {
+class DataTest {
   final Api _api;
   final _Box _box;
 
-  OurStruct._(this._api, this._box);
+  DataTest._(this._api, this._box);
 
-  void print() {
+  List<int> getCopy() {
     var tmp0 = 0;
     tmp0 = _box.borrow();
-    _api._ourStructPrint(
+    final tmp1 = _api._dataTestGetCopy(
       tmp0,
     );
-    return;
-  }
-
-  /// Manually drops the object and unregisters the FinalizableHandle.
-  void drop() {
-    _box.drop();
-  }
-}
-
-class OurStructList {
-  final Api _api;
-  final _Box _box;
-
-  OurStructList._(this._api, this._box);
-
-  void add(
-    OurStruct s,
-  ) {
-    final tmp1 = s;
-    var tmp0 = 0;
-    var tmp2 = 0;
-    tmp0 = _box.borrow();
-    tmp2 = tmp1._box.move();
-    _api._ourStructListAdd(
-      tmp0,
-      tmp2,
-    );
-    return;
-  }
-
-  void print() {
-    var tmp0 = 0;
-    tmp0 = _box.borrow();
-    _api._ourStructListPrint(
-      tmp0,
-    );
-    return;
-  }
-
-  OurStruct? get_(
-    int index,
-  ) {
-    final tmp1 = index;
-    var tmp0 = 0;
-    var tmp2 = 0;
-    tmp0 = _box.borrow();
-    tmp2 = tmp1;
-    final tmp3 = _api._ourStructListGet(
-      tmp0,
-      tmp2,
-    );
-    final tmp5 = tmp3.arg0;
-    final tmp6 = tmp3.arg1;
-    if (tmp5 == 0) {
-      return null;
+    final tmp3 = tmp1.arg0;
+    final tmp4 = tmp1.arg1;
+    final tmp5 = tmp1.arg2;
+    final ffi.Pointer<ffi.Uint8> tmp3_0 = ffi.Pointer.fromAddress(tmp3);
+    final tmp2 = tmp3_0.asTypedList(tmp4).toList();
+    if (tmp5 > 0) {
+      final ffi.Pointer<ffi.Void> tmp3_0;
+      tmp3_0 = ffi.Pointer.fromAddress(tmp3);
+      _api.__deallocate(tmp3_0, tmp5 * 1, 1);
     }
-    final ffi.Pointer<ffi.Void> tmp6_0 = ffi.Pointer.fromAddress(tmp6);
-    final tmp6_1 = _Box(_api, tmp6_0, "drop_box_OurStruct");
-    tmp6_1._finalizer = _api._registerFinalizer(tmp6_1);
-    final tmp4 = OurStruct._(_api, tmp6_1);
-    return tmp4;
+    return tmp2;
+  }
+
+  FfiBuffer getShmem() {
+    var tmp0 = 0;
+    tmp0 = _box.borrow();
+    final tmp1 = _api._dataTestGetShmem(
+      tmp0,
+    );
+    final tmp3 = tmp1;
+    final ffi.Pointer<ffi.Void> tmp3_0 = ffi.Pointer.fromAddress(tmp3);
+    final tmp3_1 = _Box(_api, tmp3_0, "drop_box_FfiBuffer");
+    tmp3_1._finalizer = _api._registerFinalizer(tmp3_1);
+    final tmp4 = FfiBuffer._(_api, tmp3_1);
+    final tmp2 = tmp4;
+    return tmp2;
   }
 
   /// Manually drops the object and unregisters the FinalizableHandle.
@@ -491,9 +421,11 @@ class OurStructList {
   }
 }
 
-class _OurStructListGetReturn extends ffi.Struct {
-  @ffi.Uint8()
-  external int arg0;
+class _DataTestGetCopyReturn extends ffi.Struct {
   @ffi.Int64()
+  external int arg0;
+  @ffi.Uint64()
   external int arg1;
+  @ffi.Uint64()
+  external int arg2;
 }

@@ -172,6 +172,7 @@ pub enum Type {
     F32,
     F64,
     String,
+    Buffer,
     Ref(Box<Type>),
     Ident(String),
     Slice(Box<Type>),
@@ -205,6 +206,7 @@ impl Type {
                 "string" => Type::String,
                 _ => unreachable!(),
             },
+            Rule::buffer => Type::Buffer,
             Rule::ident => Type::Ident(pair.as_str().to_string()),
             Rule::slice
             | Rule::vec

@@ -120,6 +120,25 @@ impl DartGenerator {
                 }
             }
 
+            class FfiBuffer {
+                final Api _api;
+                final _Box _box;
+
+                FfiBuffer._(this._api, this._box);
+
+                void drop() {
+                    _box.drop();
+                }
+
+                Uint8List toUint8List() {
+                    final buffer = _box.borrow();
+                    final address = _api._ffiBufferAddress(buffer);
+                    final size = _api._ffiBufferSize(buffer);
+                    return address.asTypedList(size);
+                }
+            }
+
+
             #(static_literal("///")) Implements Iterable and Iterator for a rust iterator.
             class Iter<T> extends Iterable<T> implements Iterator<T> {
                 final _Box _box;
@@ -290,6 +309,20 @@ impl DartGenerator {
 
                 late final _deallocate = _deallocatePtr.asFunction<
                     void Function(ffi.Pointer<ffi.Uint8>, int, int)>();
+
+                late final _ffiBufferAddressPtr = _lookup<
+                    ffi.NativeFunction<
+                        ffi.Pointer<ffi.Uint8> Function(ffi.IntPtr)>>("__ffi_buffer_address");
+
+                late final _ffiBufferAddress = _ffiBufferAddressPtr.asFunction<
+                    ffi.Pointer<ffi.Uint8> Function(int)>();
+
+                late final _ffiBufferSizePtr = _lookup<
+                    ffi.NativeFunction<
+                        ffi.Int64 Function(ffi.IntPtr)>>("__ffi_buffer_size");
+
+                late final _ffiBufferSize = _ffiBufferSizePtr.asFunction<
+                    int Function(int)>();
 
                 #(for iter in iface.iterators() => #(self.generate_function(&iter.next())))
                 #(for fut in iface.futures() => #(self.generate_function(&fut.poll())))
@@ -569,6 +602,7 @@ impl DartGenerator {
             AbiType::RefStream(ty) | AbiType::Stream(ty) => {
                 quote!(Stream<#(self.generate_type(ty))>)
             }
+            AbiType::Buffer => quote!(FfiBuffer),
         }
     }
 
