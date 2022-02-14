@@ -283,6 +283,21 @@ class Api {
     _deallocate(pointer.cast(), byteCount, alignment);
   }
 
+  void helloWorld() {
+    _helloWorld();
+    return;
+  }
+
+  Future<int> asyncHelloWorld() {
+    final tmp0 = _asyncHelloWorld();
+    final tmp2 = tmp0;
+    final ffi.Pointer<ffi.Void> tmp2_0 = ffi.Pointer.fromAddress(tmp2);
+    final tmp2_1 = _Box(this, tmp2_0, "__async_hello_world_future_drop");
+    tmp2_1._finalizer = this._registerFinalizer(tmp2_1);
+    final tmp1 = _nativeFuture(tmp2_1, this.__asyncHelloWorldFuturePoll);
+    return tmp1;
+  }
+
   FfiBuffer getImage() {
     final tmp0 = _getImage();
     final tmp2 = tmp0;
@@ -334,11 +349,62 @@ class Api {
       _ffiBufferAddressPtr.asFunction<ffi.Pointer<ffi.Uint8> Function(int)>();
 
   late final _ffiBufferSizePtr =
-      _lookup<ffi.NativeFunction<ffi.Int64 Function(ffi.IntPtr)>>(
+      _lookup<ffi.NativeFunction<ffi.Uint32 Function(ffi.IntPtr)>>(
           "__ffi_buffer_size");
 
   late final _ffiBufferSize = _ffiBufferSizePtr.asFunction<int Function(int)>();
 
+  int? __asyncHelloWorldFuturePoll(
+    int boxed,
+    int postCobject,
+    int port,
+  ) {
+    final tmp0 = boxed;
+    final tmp2 = postCobject;
+    final tmp4 = port;
+    var tmp1 = 0;
+    var tmp3 = 0;
+    var tmp5 = 0;
+    tmp1 = tmp0;
+    tmp3 = tmp2;
+    tmp5 = tmp4;
+    final tmp6 = _asyncHelloWorldFuturePoll(
+      tmp1,
+      tmp3,
+      tmp5,
+    );
+    final tmp8 = tmp6.arg0;
+    final tmp9 = tmp6.arg1;
+    final tmp10 = tmp6.arg2;
+    final tmp11 = tmp6.arg3;
+    final tmp12 = tmp6.arg4;
+    final tmp13 = tmp6.arg5;
+    if (tmp8 == 0) {
+      return null;
+    }
+    if (tmp9 == 0) {
+      final ffi.Pointer<ffi.Uint8> tmp10_0 = ffi.Pointer.fromAddress(tmp10);
+      final tmp9_0 = utf8.decode(tmp10_0.asTypedList(tmp11));
+      if (tmp11 > 0) {
+        final ffi.Pointer<ffi.Void> tmp10_0;
+        tmp10_0 = ffi.Pointer.fromAddress(tmp10);
+        this.__deallocate(tmp10_0, tmp12, 1);
+      }
+      throw tmp9_0;
+    }
+    final tmp7 = tmp13;
+    return tmp7;
+  }
+
+  late final _helloWorldPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function()>>("__hello_world");
+
+  late final _helloWorld = _helloWorldPtr.asFunction<void Function()>();
+  late final _asyncHelloWorldPtr =
+      _lookup<ffi.NativeFunction<ffi.Int64 Function()>>("__async_hello_world");
+
+  late final _asyncHelloWorld =
+      _asyncHelloWorldPtr.asFunction<int Function()>();
   late final _getImagePtr =
       _lookup<ffi.NativeFunction<ffi.Int64 Function()>>("__get_image");
 
@@ -371,6 +437,21 @@ class Api {
 
   late final _dataTestGetShmem = _dataTestGetShmemPtr.asFunction<
       int Function(
+    int,
+  )>();
+  late final _asyncHelloWorldFuturePollPtr = _lookup<
+      ffi.NativeFunction<
+          _AsyncHelloWorldFuturePollReturn Function(
+    ffi.Int64,
+    ffi.Int64,
+    ffi.Int64,
+  )>>("__async_hello_world_future_poll");
+
+  late final _asyncHelloWorldFuturePoll =
+      _asyncHelloWorldFuturePollPtr.asFunction<
+          _AsyncHelloWorldFuturePollReturn Function(
+    int,
+    int,
     int,
   )>();
 }
@@ -428,4 +509,19 @@ class _DataTestGetCopyReturn extends ffi.Struct {
   external int arg1;
   @ffi.Uint64()
   external int arg2;
+}
+
+class _AsyncHelloWorldFuturePollReturn extends ffi.Struct {
+  @ffi.Uint8()
+  external int arg0;
+  @ffi.Uint8()
+  external int arg1;
+  @ffi.Int64()
+  external int arg2;
+  @ffi.Uint64()
+  external int arg3;
+  @ffi.Uint64()
+  external int arg4;
+  @ffi.Uint8()
+  external int arg5;
 }

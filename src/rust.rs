@@ -32,6 +32,7 @@ impl RustGenerator {
             use core::pin::Pin;
             use core::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
             use std::sync::Arc;
+            use std::ffi::c_void;
             use super::*;
 
             /// Try to execute some function, catching any panics and aborting to make sure Rust
@@ -73,15 +74,15 @@ impl RustGenerator {
             }
 
             #[no_mangle]
-            pub unsafe extern "C" fn __ffi_buffer_address(ptr: i64) -> i64 {
+            pub unsafe extern "C" fn __ffi_buffer_address(ptr: *mut c_void) -> *mut c_void {
                 let buffer = &*(ptr as *mut FfiBuffer);
                 std::mem::transmute(buffer.bytes.as_ptr())
             }
 
             #[no_mangle]
-            pub unsafe extern "C" fn __ffi_buffer_size(ptr: i64) -> i64 {
+            pub unsafe extern "C" fn __ffi_buffer_size(ptr: *mut c_void) -> u32 {
                 let buffer = &*(ptr as *mut FfiBuffer);
-                std::mem::transmute(buffer.bytes.len())
+                buffer.bytes.len() as u32
             }
 
             #[no_mangle]

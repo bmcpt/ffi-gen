@@ -1,3 +1,6 @@
+fn hello_world();
+
+fn async_hello_world() -> Future<Result<u8>>;
 
 fn get_image() -> buffer;
 

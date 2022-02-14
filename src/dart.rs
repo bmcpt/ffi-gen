@@ -319,7 +319,7 @@ impl DartGenerator {
 
                 late final _ffiBufferSizePtr = _lookup<
                     ffi.NativeFunction<
-                        ffi.Int64 Function(ffi.IntPtr)>>("__ffi_buffer_size");
+                        ffi.Uint32 Function(ffi.IntPtr)>>("__ffi_buffer_size");
 
                 late final _ffiBufferSize = _ffiBufferSizePtr.asFunction<
                     int Function(int)>();

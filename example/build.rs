@@ -1,4 +1,4 @@
-use ffi_gen::{Abi, FfiGen};
+use ffi_gen::FfiGen;
 use std::path::PathBuf;
 
 fn main() {
@@ -17,4 +17,8 @@ fn main() {
     // std::fs::write(rust, format!("use crate::*;\nuse futures::Stream;\n{}", ffigen.generate_rust(Abi::Native64).unwrap())).unwrap();
     let dart = dir.join("dart").join("lib").join("bindings.dart");
     ffigen.generate_dart(dart, "api", "api").unwrap();
+    // let js = dir.join("js").join("bindings.mjs");
+    // ffigen.generate_js(js).unwrap();
+    // let ts = dir.join("js").join("bindings.d.ts");
+    // ffigen.generate_ts(ts).unwrap();
 }
