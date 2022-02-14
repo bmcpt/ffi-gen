@@ -1,7 +1,7 @@
-mod bindings;
-
-use bindings::*;
 use std::io::Read;
+use futures::Stream;
+
+ffi_gen_macro::ffi_gen!("example/api.rsh");
 
 const URL: &str = "https://file-examples-com.github.io/uploads/2017/10/file_example_JPG_1MB.jpg";
 
