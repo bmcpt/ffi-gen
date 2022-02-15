@@ -172,7 +172,7 @@ pub enum Type {
     F32,
     F64,
     String,
-    Buffer,
+    Buffer(Box<Type>),
     Ref(Box<Type>),
     Ident(String),
     Slice(Box<Type>),
@@ -206,7 +206,25 @@ impl Type {
                 "string" => Type::String,
                 _ => unreachable!(),
             },
-            Rule::buffer => Type::Buffer,
+            Rule::buffer => Type::Buffer({
+                let chars = pair.as_str().chars();
+                let inner_chars = chars.skip_while(|&c| c != '<').skip(1).take_while(|&c| c != '>');
+                let inner_s: String = inner_chars.collect();
+                let inner = match inner_s.as_str() {
+                    "u8" => Type::U8,
+                    "i8" => Type::I8,
+                    "u16" => Type::U16,
+                    "i16" => Type::I16,
+                    "u32" => Type::U32,
+                    "i32" => Type::I32,
+                    "u64" => Type::U64,
+                    "i64" => Type::I64,
+                    "f32" => Type::F32,
+                    "f64" => Type::F64,
+                    _ => panic!(),
+                };
+                Box::new(inner)
+            }),
             Rule::ident => Type::Ident(pair.as_str().to_string()),
             Rule::slice
             | Rule::vec

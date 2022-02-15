@@ -69,26 +69,51 @@ impl RustGenerator {
                 std::alloc::dealloc(ptr, layout);
             }
 
-            pub struct FfiBuffer {
-                pub bytes: Vec<u8>,
+            pub struct FfiBuffer<T> {
+                addr: usize,
+                size: usize,
+                alloc: usize,
+                phantom: std::marker::PhantomData<T>
+            }
+
+            impl<T> FfiBuffer<T> {
+                pub fn new(data: Vec<T>) -> FfiBuffer<T> {
+                    unsafe {
+                        let (addr, size, alloc) = data.into_raw_parts();
+                        FfiBuffer {
+                            addr: std::mem::transmute(addr),
+                            size: size * std::mem::size_of::<T>(),
+                            alloc: alloc * std::mem::size_of::<T>(),
+                            phantom: Default::default(),
+                        }
+                    }
+                }
+            }
+
+            impl<T> Drop for FfiBuffer<T> {
+                fn drop(&mut self) {
+                    unsafe {
+                        Vec::from_raw_parts(self.addr as *mut u8, self.size, self.alloc);
+                    }
+                }
             }
 
             #[no_mangle]
             pub unsafe extern "C" fn __ffi_buffer_address(ptr: *mut c_void) -> *mut c_void {
-                let buffer = &*(ptr as *mut FfiBuffer);
-                std::mem::transmute(buffer.bytes.as_ptr())
+                let buffer = &*(ptr as *mut FfiBuffer<u8>);
+                buffer.addr as _
             }
 
             #[no_mangle]
             pub unsafe extern "C" fn __ffi_buffer_size(ptr: *mut c_void) -> u32 {
-                let buffer = &*(ptr as *mut FfiBuffer);
-                buffer.bytes.len() as u32
+                let buffer = &*(ptr as *mut FfiBuffer<u8>);
+                buffer.size as _
             }
 
             #[no_mangle]
             pub extern "C" fn drop_box_FfiBuffer(_: i64, boxed: i64) {
                 panic_abort(move || {
-                    unsafe { Box::<FfiBuffer>::from_raw(boxed as *mut _) };
+                    unsafe { Box::<FfiBuffer<u8>>::from_raw(boxed as *mut _) };
                 });
             }
 
@@ -565,7 +590,7 @@ impl RustGenerator {
             AbiType::Future(ty) => quote!(impl Future<Output = #(self.ty(ty))>),
             AbiType::RefStream(ty) => quote!(&impl Stream<Item = #(self.ty(ty))>),
             AbiType::Stream(ty) => quote!(impl Stream<Item = #(self.ty(ty))>),
-            AbiType::Buffer => quote!(FfiBuffer),
+            AbiType::Buffer(ty) => quote!(FfiBuffer<#(self.num_type(*ty))>),
         }
     }
 

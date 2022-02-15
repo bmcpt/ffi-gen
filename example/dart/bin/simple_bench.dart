@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import '../lib/bindings.dart';
 
 void main() async {

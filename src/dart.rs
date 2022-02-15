@@ -120,24 +120,7 @@ impl DartGenerator {
                 }
             }
 
-            class FfiBuffer {
-                final Api _api;
-                final _Box _box;
-
-                FfiBuffer._(this._api, this._box);
-
-                void drop() {
-                    _box.drop();
-                }
-
-                Uint8List toUint8List() {
-                    final buffer = _box.borrow();
-                    final address = _api._ffiBufferAddress(buffer);
-                    final size = _api._ffiBufferSize(buffer);
-                    return address.asTypedList(size);
-                }
-            }
-
+            #(for ty in "Int8 Uint8 Int16 Uint16 Int32 Uint32 Int64 Uint64 Float32 Float64".split(' ') => #(self.generate_ffi_buffer(ty)))
 
             #(static_literal("///")) Implements Iterable and Iterator for a rust iterator.
             class Iter<T> extends Iterable<T> implements Iterator<T> {
@@ -400,6 +383,36 @@ impl DartGenerator {
         }
     }
 
+    fn generate_ffi_buffer(&self, ty: &str) -> dart::Tokens {
+        let bytes = ty.chars().skip_while(|&c| !c.is_digit(10)).collect::<String>().parse::<u32>().unwrap() / 8;
+        let pointer_name = match ty {
+            "Float32" => "Float",
+            "Float64" => "Double",
+            _ => ty,
+        };
+        let class_name = format!("FfiBuffer{}", ty);
+        let method_name = format!("to{}List", ty);
+        quote! {
+            class #(&class_name) {
+                final Api _api;
+                final _Box _box;
+
+                #(&class_name)._(this._api, this._box);
+
+                void drop() {
+                    _box.drop();
+                }
+
+                #(ty)List #(method_name)() {
+                    final buffer = _box.borrow();
+                    final addressRaw = _api._ffiBufferAddress(buffer).address;
+                    final size = _api._ffiBufferSize(buffer) ~/ #(bytes);
+                    return ffi.Pointer<ffi.#(pointer_name)>.fromAddress(addressRaw).asTypedList(size);
+                }
+            }
+        }
+    }
+
     fn generate_instr(&self, api: &str, instr: &Instr) -> dart::Tokens {
         match instr {
             Instr::BorrowSelf(out) => quote!(#(self.var(out)) = _box.borrow();),
@@ -602,7 +615,7 @@ impl DartGenerator {
             AbiType::RefStream(ty) | AbiType::Stream(ty) => {
                 quote!(Stream<#(self.generate_type(ty))>)
             }
-            AbiType::Buffer => quote!(FfiBuffer),
+            AbiType::Buffer(ty) => quote!(#(ffi_buffer_name_for(*ty))),
         }
     }
 
@@ -843,5 +856,20 @@ pub mod test_runner {
         let test = TestCases::new();
         test.pass(runner_file.as_ref());
         Ok(())
+    }
+}
+
+pub fn ffi_buffer_name_for(ty: NumType) -> &'static str {
+    match ty {
+        NumType::U8 => "FfiBufferUint8",
+        NumType::U16 => "FfiBufferUint16",
+        NumType::U32 => "FfiBufferUint32",
+        NumType::U64 => "FfiBufferUint64",
+        NumType::I8 => "FfiBufferInt8",
+        NumType::I16 => "FfiBufferInt16",
+        NumType::I32 => "FfiBufferInt32",
+        NumType::I64 => "FfiBufferInt64",
+        NumType::F32 => "FfiBufferFloat32",
+        NumType::F64 => "FfiBufferFloat64",
     }
 }

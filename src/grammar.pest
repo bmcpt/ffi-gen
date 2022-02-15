@@ -1,11 +1,11 @@
 ident = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
 
-primitive = {
-    "u8" | "u16" | "u32" | "u64" | "usize" |
-    "i8" | "i16" | "i32" | "i64" | "isize" |
-    "bool" | "f32" | "f64" | "string"
+sized_integer = {
+    "u8" | "u16" | "u32" | "u64" | "f32" |
+    "i8" | "i16" | "i32" | "i64" | "f64"
 }
-buffer = { "buffer" }
+primitive = { sized_integer | "usize" | "isize" | "bool" | "string" }
+buffer = { "buffer" ~ "<" ~ sized_integer ~ ">" }
 tuple = { "(" ~ (type_ ~ ("," ~ type_)*)? ~ ","? ~ ")" }
 ref_ = { "&" ~ type_ }
 slice = { "[" ~ type_ ~ "]" }

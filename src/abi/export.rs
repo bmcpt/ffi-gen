@@ -141,7 +141,7 @@ impl Abi {
                 }
                 instr.push(Instr::LiftTuple(vars, out));
             }
-            AbiType::Buffer => unimplemented!("\"buffer\" can only be used as return value"),
+            AbiType::Buffer(_) => unimplemented!("\"buffer\" can only be used as return value"),
         }
     }
 
@@ -286,7 +286,7 @@ impl Abi {
                 instr.push(Instr::LowerTuple(ret, vars));
                 instr.extend(instr_inner);
             }
-            AbiType::Buffer => {
+            AbiType::Buffer(_ty) => {
                 let ptr = gen.gen_num(self.iptr());
                 ffi_rets.push(ptr.clone());
                 instr.push(Instr::LowerObject(ret, ptr));

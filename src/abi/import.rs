@@ -1,5 +1,6 @@
 use super::VarGen;
 use crate::{Abi, AbiFunction, AbiType, FunctionType, NumType, Return, Var};
+use crate::dart::ffi_buffer_name_for;
 
 #[derive(Clone, Debug)]
 pub struct Import {
@@ -172,7 +173,7 @@ impl Abi {
             }
             AbiType::Tuple(_) => unreachable!(),
             AbiType::Result(_) => todo!(),
-            AbiType::Buffer => unimplemented!("\"buffer\" can only be used as return value"),
+            AbiType::Buffer(_) => unimplemented!("\"buffer\" can only be used as return value"),
         }
     }
 
@@ -298,11 +299,11 @@ impl Abi {
                 }
                 instr.push(Instr::LiftTuple(vars, out));
             }
-            AbiType::Buffer => {
+            AbiType::Buffer(ty) => {
                 let buf_ptr = gen.gen_num(self.iptr());
                 ffi_rets.push(buf_ptr.clone());
                 let ffi_buf = gen.gen_num(self.iptr());
-                instr.push(Instr::LiftObject("FfiBuffer".to_string(), buf_ptr.clone(), "drop_box_FfiBuffer".to_string(), ffi_buf.clone()));
+                instr.push(Instr::LiftObject(ffi_buffer_name_for(*ty).to_string(), buf_ptr.clone(), "drop_box_FfiBuffer".to_string(), ffi_buf.clone()));
                 instr.push(Instr::LiftNum(ffi_buf, out, self.iptr()));
             },
         }
