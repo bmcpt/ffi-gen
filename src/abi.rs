@@ -38,6 +38,7 @@ pub enum AbiType {
     RefStream(Box<AbiType>),
     Stream(Box<AbiType>),
     Tuple(Vec<AbiType>),
+    Buffer(NumType),
 }
 
 impl AbiType {
@@ -430,6 +431,10 @@ impl Interface {
             Type::F32 => AbiType::Num(NumType::F32),
             Type::F64 => AbiType::Num(NumType::F64),
             Type::Bool => AbiType::Bool,
+            Type::Buffer(inner) => match self.to_type(inner) {
+                AbiType::Num(ty) => AbiType::Buffer(ty),
+                ty => unimplemented!("Vec<{:?}>", ty),
+            },
             Type::Ref(inner) => match &**inner {
                 Type::String => AbiType::RefStr,
                 Type::Slice(inner) => match self.to_type(inner) {

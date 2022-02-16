@@ -10,6 +10,9 @@ crate-type = ["cdylib"]
 ffi-gen = { version = "0.1.0", path = ".." }
 
 [dependencies]
-anyhow = "1.0.51"
+anyhow = "1.0.53"
+ffi-gen = { version = "0.1.0", path = ".." }
 ffi-gen-macro = { version = "0.1.0", path = "../macro" }
 futures = "0.3.17"
+ureq = "2.4.0"
+paste = "1.0.6"

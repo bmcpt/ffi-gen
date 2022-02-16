@@ -99,6 +99,186 @@ class _Box {
   }
 }
 
+class FfiBufferInt8 {
+  final Api _api;
+  final _Box _box;
+
+  FfiBufferInt8._(this._api, this._box);
+
+  void drop() {
+    _box.drop();
+  }
+
+  Int8List toInt8List() {
+    final buffer = _box.borrow();
+    final addressRaw = _api._ffiBufferAddress(buffer).address;
+    final size = _api._ffiBufferSize(buffer) ~/ 1;
+    return ffi.Pointer<ffi.Int8>.fromAddress(addressRaw).asTypedList(size);
+  }
+}
+
+class FfiBufferUint8 {
+  final Api _api;
+  final _Box _box;
+
+  FfiBufferUint8._(this._api, this._box);
+
+  void drop() {
+    _box.drop();
+  }
+
+  Uint8List toUint8List() {
+    final buffer = _box.borrow();
+    final addressRaw = _api._ffiBufferAddress(buffer).address;
+    final size = _api._ffiBufferSize(buffer) ~/ 1;
+    return ffi.Pointer<ffi.Uint8>.fromAddress(addressRaw).asTypedList(size);
+  }
+}
+
+class FfiBufferInt16 {
+  final Api _api;
+  final _Box _box;
+
+  FfiBufferInt16._(this._api, this._box);
+
+  void drop() {
+    _box.drop();
+  }
+
+  Int16List toInt16List() {
+    final buffer = _box.borrow();
+    final addressRaw = _api._ffiBufferAddress(buffer).address;
+    final size = _api._ffiBufferSize(buffer) ~/ 2;
+    return ffi.Pointer<ffi.Int16>.fromAddress(addressRaw).asTypedList(size);
+  }
+}
+
+class FfiBufferUint16 {
+  final Api _api;
+  final _Box _box;
+
+  FfiBufferUint16._(this._api, this._box);
+
+  void drop() {
+    _box.drop();
+  }
+
+  Uint16List toUint16List() {
+    final buffer = _box.borrow();
+    final addressRaw = _api._ffiBufferAddress(buffer).address;
+    final size = _api._ffiBufferSize(buffer) ~/ 2;
+    return ffi.Pointer<ffi.Uint16>.fromAddress(addressRaw).asTypedList(size);
+  }
+}
+
+class FfiBufferInt32 {
+  final Api _api;
+  final _Box _box;
+
+  FfiBufferInt32._(this._api, this._box);
+
+  void drop() {
+    _box.drop();
+  }
+
+  Int32List toInt32List() {
+    final buffer = _box.borrow();
+    final addressRaw = _api._ffiBufferAddress(buffer).address;
+    final size = _api._ffiBufferSize(buffer) ~/ 4;
+    return ffi.Pointer<ffi.Int32>.fromAddress(addressRaw).asTypedList(size);
+  }
+}
+
+class FfiBufferUint32 {
+  final Api _api;
+  final _Box _box;
+
+  FfiBufferUint32._(this._api, this._box);
+
+  void drop() {
+    _box.drop();
+  }
+
+  Uint32List toUint32List() {
+    final buffer = _box.borrow();
+    final addressRaw = _api._ffiBufferAddress(buffer).address;
+    final size = _api._ffiBufferSize(buffer) ~/ 4;
+    return ffi.Pointer<ffi.Uint32>.fromAddress(addressRaw).asTypedList(size);
+  }
+}
+
+class FfiBufferInt64 {
+  final Api _api;
+  final _Box _box;
+
+  FfiBufferInt64._(this._api, this._box);
+
+  void drop() {
+    _box.drop();
+  }
+
+  Int64List toInt64List() {
+    final buffer = _box.borrow();
+    final addressRaw = _api._ffiBufferAddress(buffer).address;
+    final size = _api._ffiBufferSize(buffer) ~/ 8;
+    return ffi.Pointer<ffi.Int64>.fromAddress(addressRaw).asTypedList(size);
+  }
+}
+
+class FfiBufferUint64 {
+  final Api _api;
+  final _Box _box;
+
+  FfiBufferUint64._(this._api, this._box);
+
+  void drop() {
+    _box.drop();
+  }
+
+  Uint64List toUint64List() {
+    final buffer = _box.borrow();
+    final addressRaw = _api._ffiBufferAddress(buffer).address;
+    final size = _api._ffiBufferSize(buffer) ~/ 8;
+    return ffi.Pointer<ffi.Uint64>.fromAddress(addressRaw).asTypedList(size);
+  }
+}
+
+class FfiBufferFloat32 {
+  final Api _api;
+  final _Box _box;
+
+  FfiBufferFloat32._(this._api, this._box);
+
+  void drop() {
+    _box.drop();
+  }
+
+  Float32List toFloat32List() {
+    final buffer = _box.borrow();
+    final addressRaw = _api._ffiBufferAddress(buffer).address;
+    final size = _api._ffiBufferSize(buffer) ~/ 4;
+    return ffi.Pointer<ffi.Float>.fromAddress(addressRaw).asTypedList(size);
+  }
+}
+
+class FfiBufferFloat64 {
+  final Api _api;
+  final _Box _box;
+
+  FfiBufferFloat64._(this._api, this._box);
+
+  void drop() {
+    _box.drop();
+  }
+
+  Float64List toFloat64List() {
+    final buffer = _box.borrow();
+    final addressRaw = _api._ffiBufferAddress(buffer).address;
+    final size = _api._ffiBufferSize(buffer) ~/ 8;
+    return ffi.Pointer<ffi.Double>.fromAddress(addressRaw).asTypedList(size);
+  }
+}
+
 /// Implements Iterable and Iterator for a rust iterator.
 class Iter<T> extends Iterable<T> implements Iterator<T> {
   final _Box _box;
@@ -265,14 +445,11 @@ class Api {
     _deallocate(pointer.cast(), byteCount, alignment);
   }
 
-  /// Prints a friendly greeting to stdout.
   void helloWorld() {
     _helloWorld();
     return;
   }
 
-  /// Returns a future that prints a friendly
-  /// greeting to stdout.
   Future<int> asyncHelloWorld() {
     final tmp0 = _asyncHelloWorld();
     final tmp2 = tmp0;
@@ -281,6 +458,214 @@ class Api {
     tmp2_1._finalizer = this._registerFinalizer(tmp2_1);
     final tmp1 = _nativeFuture(tmp2_1, this.__asyncHelloWorldFuturePoll);
     return tmp1;
+  }
+
+  FfiBufferUint8 getImage() {
+    final tmp0 = _getImage();
+    final tmp2 = tmp0;
+    final ffi.Pointer<ffi.Void> tmp2_0 = ffi.Pointer.fromAddress(tmp2);
+    final tmp2_1 = _Box(this, tmp2_0, "drop_box_FfiBuffer");
+    tmp2_1._finalizer = this._registerFinalizer(tmp2_1);
+    final tmp3 = FfiBufferUint8._(this, tmp2_1);
+    final tmp1 = tmp3;
+    return tmp1;
+  }
+
+  DataTest create(
+    int n,
+  ) {
+    final tmp0 = n;
+    var tmp1 = 0;
+    tmp1 = tmp0;
+    final tmp2 = _create(
+      tmp1,
+    );
+    final tmp4 = tmp2;
+    final ffi.Pointer<ffi.Void> tmp4_0 = ffi.Pointer.fromAddress(tmp4);
+    final tmp4_1 = _Box(this, tmp4_0, "drop_box_DataTest");
+    tmp4_1._finalizer = this._registerFinalizer(tmp4_1);
+    final tmp3 = DataTest._(this, tmp4_1);
+    return tmp3;
+  }
+
+  FfiBufferUint8 getU8Counting(
+    int n,
+  ) {
+    final tmp0 = n;
+    var tmp1 = 0;
+    tmp1 = tmp0;
+    final tmp2 = _getU8Counting(
+      tmp1,
+    );
+    final tmp4 = tmp2;
+    final ffi.Pointer<ffi.Void> tmp4_0 = ffi.Pointer.fromAddress(tmp4);
+    final tmp4_1 = _Box(this, tmp4_0, "drop_box_FfiBuffer");
+    tmp4_1._finalizer = this._registerFinalizer(tmp4_1);
+    final tmp5 = FfiBufferUint8._(this, tmp4_1);
+    final tmp3 = tmp5;
+    return tmp3;
+  }
+
+  FfiBufferUint16 getU16Counting(
+    int n,
+  ) {
+    final tmp0 = n;
+    var tmp1 = 0;
+    tmp1 = tmp0;
+    final tmp2 = _getU16Counting(
+      tmp1,
+    );
+    final tmp4 = tmp2;
+    final ffi.Pointer<ffi.Void> tmp4_0 = ffi.Pointer.fromAddress(tmp4);
+    final tmp4_1 = _Box(this, tmp4_0, "drop_box_FfiBuffer");
+    tmp4_1._finalizer = this._registerFinalizer(tmp4_1);
+    final tmp5 = FfiBufferUint16._(this, tmp4_1);
+    final tmp3 = tmp5;
+    return tmp3;
+  }
+
+  FfiBufferUint32 getU32Counting(
+    int n,
+  ) {
+    final tmp0 = n;
+    var tmp1 = 0;
+    tmp1 = tmp0;
+    final tmp2 = _getU32Counting(
+      tmp1,
+    );
+    final tmp4 = tmp2;
+    final ffi.Pointer<ffi.Void> tmp4_0 = ffi.Pointer.fromAddress(tmp4);
+    final tmp4_1 = _Box(this, tmp4_0, "drop_box_FfiBuffer");
+    tmp4_1._finalizer = this._registerFinalizer(tmp4_1);
+    final tmp5 = FfiBufferUint32._(this, tmp4_1);
+    final tmp3 = tmp5;
+    return tmp3;
+  }
+
+  FfiBufferUint64 getU64Counting(
+    int n,
+  ) {
+    final tmp0 = n;
+    var tmp1 = 0;
+    tmp1 = tmp0;
+    final tmp2 = _getU64Counting(
+      tmp1,
+    );
+    final tmp4 = tmp2;
+    final ffi.Pointer<ffi.Void> tmp4_0 = ffi.Pointer.fromAddress(tmp4);
+    final tmp4_1 = _Box(this, tmp4_0, "drop_box_FfiBuffer");
+    tmp4_1._finalizer = this._registerFinalizer(tmp4_1);
+    final tmp5 = FfiBufferUint64._(this, tmp4_1);
+    final tmp3 = tmp5;
+    return tmp3;
+  }
+
+  FfiBufferInt8 getI8Counting(
+    int n,
+  ) {
+    final tmp0 = n;
+    var tmp1 = 0;
+    tmp1 = tmp0;
+    final tmp2 = _getI8Counting(
+      tmp1,
+    );
+    final tmp4 = tmp2;
+    final ffi.Pointer<ffi.Void> tmp4_0 = ffi.Pointer.fromAddress(tmp4);
+    final tmp4_1 = _Box(this, tmp4_0, "drop_box_FfiBuffer");
+    tmp4_1._finalizer = this._registerFinalizer(tmp4_1);
+    final tmp5 = FfiBufferInt8._(this, tmp4_1);
+    final tmp3 = tmp5;
+    return tmp3;
+  }
+
+  FfiBufferInt16 getI16Counting(
+    int n,
+  ) {
+    final tmp0 = n;
+    var tmp1 = 0;
+    tmp1 = tmp0;
+    final tmp2 = _getI16Counting(
+      tmp1,
+    );
+    final tmp4 = tmp2;
+    final ffi.Pointer<ffi.Void> tmp4_0 = ffi.Pointer.fromAddress(tmp4);
+    final tmp4_1 = _Box(this, tmp4_0, "drop_box_FfiBuffer");
+    tmp4_1._finalizer = this._registerFinalizer(tmp4_1);
+    final tmp5 = FfiBufferInt16._(this, tmp4_1);
+    final tmp3 = tmp5;
+    return tmp3;
+  }
+
+  FfiBufferInt32 getI32Counting(
+    int n,
+  ) {
+    final tmp0 = n;
+    var tmp1 = 0;
+    tmp1 = tmp0;
+    final tmp2 = _getI32Counting(
+      tmp1,
+    );
+    final tmp4 = tmp2;
+    final ffi.Pointer<ffi.Void> tmp4_0 = ffi.Pointer.fromAddress(tmp4);
+    final tmp4_1 = _Box(this, tmp4_0, "drop_box_FfiBuffer");
+    tmp4_1._finalizer = this._registerFinalizer(tmp4_1);
+    final tmp5 = FfiBufferInt32._(this, tmp4_1);
+    final tmp3 = tmp5;
+    return tmp3;
+  }
+
+  FfiBufferInt64 getI64Counting(
+    int n,
+  ) {
+    final tmp0 = n;
+    var tmp1 = 0;
+    tmp1 = tmp0;
+    final tmp2 = _getI64Counting(
+      tmp1,
+    );
+    final tmp4 = tmp2;
+    final ffi.Pointer<ffi.Void> tmp4_0 = ffi.Pointer.fromAddress(tmp4);
+    final tmp4_1 = _Box(this, tmp4_0, "drop_box_FfiBuffer");
+    tmp4_1._finalizer = this._registerFinalizer(tmp4_1);
+    final tmp5 = FfiBufferInt64._(this, tmp4_1);
+    final tmp3 = tmp5;
+    return tmp3;
+  }
+
+  FfiBufferFloat32 getF32Counting(
+    int n,
+  ) {
+    final tmp0 = n;
+    var tmp1 = 0;
+    tmp1 = tmp0;
+    final tmp2 = _getF32Counting(
+      tmp1,
+    );
+    final tmp4 = tmp2;
+    final ffi.Pointer<ffi.Void> tmp4_0 = ffi.Pointer.fromAddress(tmp4);
+    final tmp4_1 = _Box(this, tmp4_0, "drop_box_FfiBuffer");
+    tmp4_1._finalizer = this._registerFinalizer(tmp4_1);
+    final tmp5 = FfiBufferFloat32._(this, tmp4_1);
+    final tmp3 = tmp5;
+    return tmp3;
+  }
+
+  FfiBufferFloat64 getF64Counting(
+    int n,
+  ) {
+    final tmp0 = n;
+    var tmp1 = 0;
+    tmp1 = tmp0;
+    final tmp2 = _getF64Counting(
+      tmp1,
+    );
+    final tmp4 = tmp2;
+    final ffi.Pointer<ffi.Void> tmp4_0 = ffi.Pointer.fromAddress(tmp4);
+    final tmp4_1 = _Box(this, tmp4_0, "drop_box_FfiBuffer");
+    tmp4_1._finalizer = this._registerFinalizer(tmp4_1);
+    final tmp5 = FfiBufferFloat64._(this, tmp4_1);
+    final tmp3 = tmp5;
+    return tmp3;
   }
 
   late final _allocatePtr = _lookup<
@@ -297,6 +682,19 @@ class Api {
 
   late final _deallocate = _deallocatePtr
       .asFunction<void Function(ffi.Pointer<ffi.Uint8>, int, int)>();
+
+  late final _ffiBufferAddressPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Uint8> Function(ffi.IntPtr)>>(
+          "__ffi_buffer_address");
+
+  late final _ffiBufferAddress =
+      _ffiBufferAddressPtr.asFunction<ffi.Pointer<ffi.Uint8> Function(int)>();
+
+  late final _ffiBufferSizePtr =
+      _lookup<ffi.NativeFunction<ffi.Uint32 Function(ffi.IntPtr)>>(
+          "__ffi_buffer_size");
+
+  late final _ffiBufferSize = _ffiBufferSizePtr.asFunction<int Function(int)>();
 
   int? __asyncHelloWorldFuturePoll(
     int boxed,
@@ -349,6 +747,140 @@ class Api {
 
   late final _asyncHelloWorld =
       _asyncHelloWorldPtr.asFunction<int Function()>();
+  late final _getImagePtr =
+      _lookup<ffi.NativeFunction<ffi.Int64 Function()>>("__get_image");
+
+  late final _getImage = _getImagePtr.asFunction<int Function()>();
+  late final _createPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int64 Function(
+    ffi.Uint64,
+  )>>("__create");
+
+  late final _create = _createPtr.asFunction<
+      int Function(
+    int,
+  )>();
+  late final _getU8CountingPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int64 Function(
+    ffi.Uint64,
+  )>>("__get_u8_counting");
+
+  late final _getU8Counting = _getU8CountingPtr.asFunction<
+      int Function(
+    int,
+  )>();
+  late final _getU16CountingPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int64 Function(
+    ffi.Uint64,
+  )>>("__get_u16_counting");
+
+  late final _getU16Counting = _getU16CountingPtr.asFunction<
+      int Function(
+    int,
+  )>();
+  late final _getU32CountingPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int64 Function(
+    ffi.Uint64,
+  )>>("__get_u32_counting");
+
+  late final _getU32Counting = _getU32CountingPtr.asFunction<
+      int Function(
+    int,
+  )>();
+  late final _getU64CountingPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int64 Function(
+    ffi.Uint64,
+  )>>("__get_u64_counting");
+
+  late final _getU64Counting = _getU64CountingPtr.asFunction<
+      int Function(
+    int,
+  )>();
+  late final _getI8CountingPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int64 Function(
+    ffi.Uint64,
+  )>>("__get_i8_counting");
+
+  late final _getI8Counting = _getI8CountingPtr.asFunction<
+      int Function(
+    int,
+  )>();
+  late final _getI16CountingPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int64 Function(
+    ffi.Uint64,
+  )>>("__get_i16_counting");
+
+  late final _getI16Counting = _getI16CountingPtr.asFunction<
+      int Function(
+    int,
+  )>();
+  late final _getI32CountingPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int64 Function(
+    ffi.Uint64,
+  )>>("__get_i32_counting");
+
+  late final _getI32Counting = _getI32CountingPtr.asFunction<
+      int Function(
+    int,
+  )>();
+  late final _getI64CountingPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int64 Function(
+    ffi.Uint64,
+  )>>("__get_i64_counting");
+
+  late final _getI64Counting = _getI64CountingPtr.asFunction<
+      int Function(
+    int,
+  )>();
+  late final _getF32CountingPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int64 Function(
+    ffi.Uint64,
+  )>>("__get_f32_counting");
+
+  late final _getF32Counting = _getF32CountingPtr.asFunction<
+      int Function(
+    int,
+  )>();
+  late final _getF64CountingPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int64 Function(
+    ffi.Uint64,
+  )>>("__get_f64_counting");
+
+  late final _getF64Counting = _getF64CountingPtr.asFunction<
+      int Function(
+    int,
+  )>();
+  late final _dataTestGetCopyPtr = _lookup<
+      ffi.NativeFunction<
+          _DataTestGetCopyReturn Function(
+    ffi.Int64,
+  )>>("__DataTest_get_copy");
+
+  late final _dataTestGetCopy = _dataTestGetCopyPtr.asFunction<
+      _DataTestGetCopyReturn Function(
+    int,
+  )>();
+  late final _dataTestGetShmemPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int64 Function(
+    ffi.Int64,
+  )>>("__DataTest_get_shmem");
+
+  late final _dataTestGetShmem = _dataTestGetShmemPtr.asFunction<
+      int Function(
+    int,
+  )>();
   late final _asyncHelloWorldFuturePollPtr = _lookup<
       ffi.NativeFunction<
           _AsyncHelloWorldFuturePollReturn Function(
@@ -364,6 +896,61 @@ class Api {
     int,
     int,
   )>();
+}
+
+class DataTest {
+  final Api _api;
+  final _Box _box;
+
+  DataTest._(this._api, this._box);
+
+  List<int> getCopy() {
+    var tmp0 = 0;
+    tmp0 = _box.borrow();
+    final tmp1 = _api._dataTestGetCopy(
+      tmp0,
+    );
+    final tmp3 = tmp1.arg0;
+    final tmp4 = tmp1.arg1;
+    final tmp5 = tmp1.arg2;
+    final ffi.Pointer<ffi.Uint8> tmp3_0 = ffi.Pointer.fromAddress(tmp3);
+    final tmp2 = tmp3_0.asTypedList(tmp4).toList();
+    if (tmp5 > 0) {
+      final ffi.Pointer<ffi.Void> tmp3_0;
+      tmp3_0 = ffi.Pointer.fromAddress(tmp3);
+      _api.__deallocate(tmp3_0, tmp5 * 1, 1);
+    }
+    return tmp2;
+  }
+
+  FfiBufferUint8 getShmem() {
+    var tmp0 = 0;
+    tmp0 = _box.borrow();
+    final tmp1 = _api._dataTestGetShmem(
+      tmp0,
+    );
+    final tmp3 = tmp1;
+    final ffi.Pointer<ffi.Void> tmp3_0 = ffi.Pointer.fromAddress(tmp3);
+    final tmp3_1 = _Box(_api, tmp3_0, "drop_box_FfiBuffer");
+    tmp3_1._finalizer = _api._registerFinalizer(tmp3_1);
+    final tmp4 = FfiBufferUint8._(_api, tmp3_1);
+    final tmp2 = tmp4;
+    return tmp2;
+  }
+
+  /// Manually drops the object and unregisters the FinalizableHandle.
+  void drop() {
+    _box.drop();
+  }
+}
+
+class _DataTestGetCopyReturn extends ffi.Struct {
+  @ffi.Int64()
+  external int arg0;
+  @ffi.Uint64()
+  external int arg1;
+  @ffi.Uint64()
+  external int arg2;
 }
 
 class _AsyncHelloWorldFuturePollReturn extends ffi.Struct {

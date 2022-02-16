@@ -224,6 +224,7 @@ impl TsGenerator {
                         quote!([#(for ty in tys join (, ) => #(self.generate_return_type(Some(ty))))])
                     }
                 },
+                AbiType::Buffer(_) => unimplemented!("\"FfiBuffer\" type for javascript"),
             }
         } else {
             quote!(void)

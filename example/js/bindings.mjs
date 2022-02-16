@@ -213,67 +213,72 @@ export class Api {
     this.instance.exports[symbol](0, ptr);
   }
 
-  helloWorld() {
-    this.instance.exports.__hello_world();
-    return;
-  }
-  asyncHelloWorld() {
-    const tmp0 = this.instance.exports.__async_hello_world();
+  getImage() {
+    const tmp0 = this.instance.exports.__get_image();
     const tmp2 = tmp0;
     const tmp2_0 = () => {
-      this.drop("__async_hello_world_future_drop", tmp2);
+      this.drop("drop_box_FfiBuffer", tmp2);
     };
     const tmp2_1 = new Box(tmp2, tmp2_0);
-    const tmp1 = nativeFuture(tmp2_1, (a, b, c) => {
-      return this.asyncHelloWorldFuturePoll(a, b, c);
-    });
+    const tmp3 = new FfiBuffer(this, tmp2_1);
+    const tmp1 = tmp3;
     return tmp1;
   }
-  asyncHelloWorldFuturePoll(boxed, postCobject, port) {
-    const tmp0 = boxed;
-    const tmp2 = postCobject;
-    const tmp4 = port;
+  create(n) {
+    const tmp0 = n;
     let tmp1 = 0;
-    let tmp3 = 0;
-    let tmp5 = 0;
-    let tmp6 = 0;
     tmp1 = tmp0;
-    tmp3 = tmp2;
-    const tmp5_0 = new BigInt64Array(1);
-    tmp5_0[0] = tmp4;
-    const tmp5_1 = new Uint32Array(tmp5_0.buffer);
-    tmp5 = tmp5_1[0];
-    tmp6 = tmp5_1[1];
-    const tmp7 = this.instance.exports.__async_hello_world_future_poll(
-      tmp1,
+    const tmp2 = this.instance.exports.__create(tmp1);
+    const tmp4 = tmp2;
+    const tmp4_0 = () => {
+      this.drop("drop_box_DataTest", tmp4);
+    };
+    const tmp4_1 = new Box(tmp4, tmp4_0);
+    const tmp3 = new DataTest(this, tmp4_1);
+    return tmp3;
+  }
+}
+
+export class DataTest {
+  constructor(api, box) {
+    this.api = api;
+    this.box = box;
+  }
+
+  getCopy() {
+    let tmp0 = 0;
+    tmp0 = this.box.borrow();
+    const tmp1 = this.api.instance.exports.__DataTest_get_copy(tmp0);
+    const tmp3 = tmp1[0];
+    const tmp4 = tmp1[1];
+    const tmp5 = tmp1[2];
+    const tmp2_0 = new Uint8Array(
+      this.api.instance.exports.memory.buffer,
       tmp3,
-      tmp5,
-      tmp6
+      tmp4
     );
-    const tmp9 = tmp7[0];
-    const tmp10 = tmp7[1];
-    const tmp11 = tmp7[2];
-    const tmp12 = tmp7[3];
-    const tmp13 = tmp7[4];
-    const tmp14 = tmp7[5];
-    if (tmp9 === 0) {
-      return null;
+    const tmp2 = Array.from(tmp2_0);
+    if (tmp5 > 0) {
+      this.api.deallocate(tmp3, tmp5 * 4, 4);
     }
-    if (tmp10 === 0) {
-      const tmp10_0 = new Uint8Array(
-        this.instance.exports.memory.buffer,
-        tmp11,
-        tmp12
-      );
-      const tmp10_1 = new TextDecoder();
-      const tmp10_2 = tmp10_1.decode(tmp10_0);
-      if (tmp12 > 0) {
-        this.deallocate(tmp11, tmp13, 1);
-      }
-      throw tmp10_2;
-    }
-    const tmp8 = tmp14;
-    return tmp8;
+    return tmp2;
+  }
+  getShmem() {
+    let tmp0 = 0;
+    tmp0 = this.box.borrow();
+    const tmp1 = this.api.instance.exports.__DataTest_get_shmem(tmp0);
+    const tmp3 = tmp1;
+    const tmp3_0 = () => {
+      this.api.drop("drop_box_FfiBuffer", tmp3);
+    };
+    const tmp3_1 = new Box(tmp3, tmp3_0);
+    const tmp4 = new FfiBuffer(this.api, tmp3_1);
+    const tmp2 = tmp4;
+    return tmp2;
+  }
+
+  drop() {
+    this.box.drop();
   }
 }
 

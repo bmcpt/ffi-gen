@@ -1,14 +1,5 @@
-## build
-```sh
-cargo build --target wasm32-unknown-unknown && cp ../target/wasm32-unknown-unknown/debug/api.wasm js
-```
+Added a new data type called 'buffer'. Example demonstrates how to use it. 
 
-### run in node
-```sh
-node js/index.mjs
-```
-
-### run in the browser
-```sh
-npx --yes http-server js
-```
+    cd example/dart
+    cargo build
+    LD_LIBRARY_PATH=../../target/debug dart bin/simple_bench.dart
