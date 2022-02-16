@@ -90,7 +90,7 @@ impl Abi {
             AbiType::Option(ty) => {
                 let opt = gen.gen_num(NumType::U8);
                 ffi_args.push(opt.clone());
-                let some = gen.gen((&**ty).clone());
+                let some = gen.gen((**ty).clone());
                 let mut some_instr = vec![];
                 self.export_arg(some.clone(), gen, &mut some_instr, ffi_args);
                 instr.push(Instr::LiftOption(opt, out, some, some_instr));
@@ -99,37 +99,37 @@ impl Abi {
             AbiType::RefIter(ty) => {
                 let ptr = gen.gen_num(self.iptr());
                 ffi_args.push(ptr.clone());
-                let ty = (&**ty).clone();
+                let ty = (**ty).clone();
                 instr.push(Instr::LiftRefIter(ptr, out, ty));
             }
             AbiType::Iter(ty) => {
                 let ptr = gen.gen_num(self.iptr());
                 ffi_args.push(ptr.clone());
-                let ty = (&**ty).clone();
+                let ty = (**ty).clone();
                 instr.push(Instr::LiftIter(ptr, out, ty));
             }
             AbiType::RefFuture(ty) => {
                 let ptr = gen.gen_num(self.iptr());
                 ffi_args.push(ptr.clone());
-                let ty = (&**ty).clone();
+                let ty = (**ty).clone();
                 instr.push(Instr::LiftRefFuture(ptr, out, ty));
             }
             AbiType::Future(ty) => {
                 let ptr = gen.gen_num(self.iptr());
                 ffi_args.push(ptr.clone());
-                let ty = (&**ty).clone();
+                let ty = (**ty).clone();
                 instr.push(Instr::LiftFuture(ptr, out, ty));
             }
             AbiType::RefStream(ty) => {
                 let ptr = gen.gen_num(self.iptr());
                 ffi_args.push(ptr.clone());
-                let ty = (&**ty).clone();
+                let ty = (**ty).clone();
                 instr.push(Instr::LiftRefStream(ptr, out, ty));
             }
             AbiType::Stream(ty) => {
                 let ptr = gen.gen_num(self.iptr());
                 ffi_args.push(ptr.clone());
-                let ty = (&**ty).clone();
+                let ty = (**ty).clone();
                 instr.push(Instr::LiftStream(ptr, out, ty));
             }
             AbiType::Tuple(tys) => {
@@ -222,7 +222,7 @@ impl Abi {
             }
             AbiType::Option(ty) => {
                 let var = gen.gen_num(NumType::U8);
-                let some = gen.gen((&**ty).clone());
+                let some = gen.gen((**ty).clone());
                 ffi_rets.push(var.clone());
                 let mut some_instr = vec![];
                 self.export_return(some.clone(), gen, &mut some_instr, ffi_rets);
@@ -230,7 +230,7 @@ impl Abi {
             }
             AbiType::Result(ty) => {
                 let var = gen.gen_num(NumType::U8);
-                let ok = gen.gen((&**ty).clone());
+                let ok = gen.gen((**ty).clone());
                 let err = gen.gen(AbiType::String);
                 ffi_rets.push(var.clone());
                 let mut err_instr = vec![];
@@ -242,37 +242,37 @@ impl Abi {
             AbiType::RefIter(ty) => {
                 let ptr = gen.gen_num(self.iptr());
                 ffi_rets.push(ptr.clone());
-                let ty = (&**ty).clone();
+                let ty = (**ty).clone();
                 instr.push(Instr::LowerRefIter(ret, ptr, ty));
             }
             AbiType::Iter(ty) => {
                 let ptr = gen.gen_num(self.iptr());
                 ffi_rets.push(ptr.clone());
-                let ty = (&**ty).clone();
+                let ty = (**ty).clone();
                 instr.push(Instr::LowerIter(ret, ptr, ty));
             }
             AbiType::RefFuture(ty) => {
                 let ptr = gen.gen_num(self.iptr());
                 ffi_rets.push(ptr.clone());
-                let ty = (&**ty).clone();
+                let ty = (**ty).clone();
                 instr.push(Instr::LowerRefFuture(ret, ptr, ty));
             }
             AbiType::Future(ty) => {
                 let ptr = gen.gen_num(self.iptr());
                 ffi_rets.push(ptr.clone());
-                let ty = (&**ty).clone();
+                let ty = (**ty).clone();
                 instr.push(Instr::LowerFuture(ret, ptr, ty));
             }
             AbiType::RefStream(ty) => {
                 let ptr = gen.gen_num(self.iptr());
                 ffi_rets.push(ptr.clone());
-                let ty = (&**ty).clone();
+                let ty = (**ty).clone();
                 instr.push(Instr::LowerRefStream(ret, ptr, ty));
             }
             AbiType::Stream(ty) => {
                 let ptr = gen.gen_num(self.iptr());
                 ffi_rets.push(ptr.clone());
-                let ty = (&**ty).clone();
+                let ty = (**ty).clone();
                 instr.push(Instr::LowerStream(ret, ptr, ty));
             }
             AbiType::Tuple(tys) => {

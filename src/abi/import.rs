@@ -19,6 +19,7 @@ impl Abi {
         gen: &mut VarGen,
         ffi_args: &mut Vec<Var>,
         instr: &mut Vec<Instr>,
+        #[allow(clippy::ptr_arg)]
         instr_cleanup: &mut Vec<Instr>,
     ) {
         match &arg.ty {
@@ -165,7 +166,7 @@ impl Abi {
             }
             AbiType::Option(ty) => {
                 let var = gen.gen_num(NumType::U8);
-                let some = gen.gen((&**ty).clone());
+                let some = gen.gen((**ty).clone());
                 ffi_args.push(var.clone());
                 let mut some_instr = vec![];
                 self.import_arg(some.clone(), gen, ffi_args, &mut some_instr, instr_cleanup);
@@ -305,7 +306,7 @@ impl Abi {
                 let ffi_buf = gen.gen_num(self.iptr());
                 instr.push(Instr::LiftObject(
                     ffi_buffer_name_for(*ty).to_string(),
-                    buf_ptr.clone(),
+                    buf_ptr,
                     "drop_box_FfiBuffer".to_string(),
                     ffi_buf.clone(),
                 ));
