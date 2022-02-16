@@ -19,6 +19,8 @@ jobs:
 
     - name: Install rust toolchain
       uses: hecrj/setup-rust-action@v1
+      with:
+        channel: nightly
 
     - uses: dart-lang/setup-dart@v1
     - run: npm i -g prettier 
@@ -36,6 +38,7 @@ jobs:
     - name: Install rust toolchain
       uses: hecrj/setup-rust-action@v1
       with:
+        channel: nightly
         components: rustfmt
 
     - name: cargo fmt
@@ -50,6 +53,7 @@ jobs:
     - name: Install rust toolchain
       uses: hecrj/setup-rust-action@v1
       with:
+        channel: nightly
         components: clippy
 
     - uses: dart-lang/setup-dart@v1
