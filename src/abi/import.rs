@@ -19,8 +19,7 @@ impl Abi {
         gen: &mut VarGen,
         ffi_args: &mut Vec<Var>,
         instr: &mut Vec<Instr>,
-        #[allow(clippy::ptr_arg)]
-        instr_cleanup: &mut Vec<Instr>,
+        #[allow(clippy::ptr_arg)] instr_cleanup: &mut Vec<Instr>,
     ) {
         match &arg.ty {
             AbiType::Num(num)
