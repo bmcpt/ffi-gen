@@ -783,6 +783,7 @@ pub mod test_runner {
     pub fn compile_pass(iface: &str, rust: rust::Tokens, dart: dart::Tokens) -> Result<()> {
         let iface = Interface::parse(iface)?;
         let mut rust_file = NamedTempFile::new()?;
+        writeln!(rust_file, "#![feature(vec_into_raw_parts)]")?;
         let rust_gen = RustGenerator::new(Abi::native());
         let rust_tokens = rust_gen.generate(iface.clone());
         let mut dart_file = NamedTempFile::new()?;

@@ -2,6 +2,7 @@
 //!
 //! Call rust from any language.
 #![deny(missing_docs)]
+#![feature(vec_into_raw_parts)]
 
 mod abi;
 mod dart;

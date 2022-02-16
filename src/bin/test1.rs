@@ -1,3 +1,4 @@
+#![feature(vec_into_raw_parts)]
 use ffi_gen::FfiGen;
 use std::path::Path;
 
