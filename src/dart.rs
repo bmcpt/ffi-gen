@@ -384,7 +384,13 @@ impl DartGenerator {
     }
 
     fn generate_ffi_buffer(&self, ty: &str) -> dart::Tokens {
-        let bytes = ty.chars().skip_while(|&c| !c.is_digit(10)).collect::<String>().parse::<u32>().unwrap() / 8;
+        let bytes = ty
+            .chars()
+            .skip_while(|&c| !c.is_digit(10))
+            .collect::<String>()
+            .parse::<u32>()
+            .unwrap()
+            / 8;
         let pointer_name = match ty {
             "Float32" => "Float",
             "Float64" => "Double",

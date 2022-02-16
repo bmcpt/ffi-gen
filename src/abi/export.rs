@@ -290,7 +290,7 @@ impl Abi {
                 let ptr = gen.gen_num(self.iptr());
                 ffi_rets.push(ptr.clone());
                 instr.push(Instr::LowerObject(ret, ptr));
-            },
+            }
         }
     }
 
