@@ -1,5 +1,5 @@
 #![feature(vec_into_raw_parts)]
-#![allow(unused)]
+#![allow(unused, clippy::transmutes_expressible_as_ptr_casts)]
 
 use anyhow::Result;
 use futures::Stream;
