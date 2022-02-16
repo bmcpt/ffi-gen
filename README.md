@@ -8,6 +8,10 @@ This requires `wasm-multi-value-reverse-polyfill` to be in your path when target
 cargo install --git https://github.com/vmx/wasm-multi-value-reverse-polyfill --locked
 ```
 
+## Usage
+
+You need `#![feature(vec_into_raw_parts)]` enabled on the nightly compilier on your crate, for the API bindings to work.
+
 ## Supported languages
 
 - dart

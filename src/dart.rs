@@ -384,7 +384,13 @@ impl DartGenerator {
     }
 
     fn generate_ffi_buffer(&self, ty: &str) -> dart::Tokens {
-        let bytes = ty.chars().skip_while(|&c| !c.is_digit(10)).collect::<String>().parse::<u32>().unwrap() / 8;
+        let bytes = ty
+            .chars()
+            .skip_while(|&c| !c.is_digit(10))
+            .collect::<String>()
+            .parse::<u32>()
+            .unwrap()
+            / 8;
         let pointer_name = match ty {
             "Float32" => "Float",
             "Float64" => "Double",
@@ -777,6 +783,7 @@ pub mod test_runner {
     pub fn compile_pass(iface: &str, rust: rust::Tokens, dart: dart::Tokens) -> Result<()> {
         let iface = Interface::parse(iface)?;
         let mut rust_file = NamedTempFile::new()?;
+        writeln!(rust_file, "#![feature(vec_into_raw_parts)]")?;
         let rust_gen = RustGenerator::new(Abi::native());
         let rust_tokens = rust_gen.generate(iface.clone());
         let mut dart_file = NamedTempFile::new()?;
