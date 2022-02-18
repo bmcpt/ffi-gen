@@ -5,7 +5,9 @@ use anyhow::Result;
 use std::io::Read;
 use futures::Stream;
 
-ffi_gen_macro::ffi_gen!("example/api.rsh");
+mod bindings;
+use bindings::api;
+// ffi_gen_macro::ffi_gen!("example/api.rsh");
 
 const URL: &str = "https://file-examples-com.github.io/uploads/2017/10/file_example_JPG_1MB.jpg";
 
@@ -76,4 +78,28 @@ pub fn hello_world() {
 pub async fn async_hello_world() -> Result<u8> {
     log("hello world");
     Ok(0)
+}
+
+struct CustomType {
+    n: i32,
+}
+
+impl CustomType {
+    fn get_n(&self) -> i32 {
+        self.n
+    }
+}
+
+fn create_list() -> Vec<CustomType> {
+    vec![
+        CustomType { n: 5 },
+        CustomType { n: 4 },
+        CustomType { n: 3 },
+        CustomType { n: 2 },
+        CustomType { n: 1 },
+    ]
+}
+
+fn t() -> CustomType {
+    CustomType {n: 0}
 }

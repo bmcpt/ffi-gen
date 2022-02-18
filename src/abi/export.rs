@@ -142,6 +142,7 @@ impl Abi {
                 instr.push(Instr::LiftTuple(vars, out));
             }
             AbiType::Buffer(_) => unimplemented!("\"buffer\" can only be used as return value"),
+            AbiType::List(_) => todo!(),
         }
     }
 
@@ -291,6 +292,13 @@ impl Abi {
                 ffi_rets.push(ptr.clone());
                 instr.push(Instr::LowerObject(ret, ptr));
             },
+            AbiType::List(ty) => {
+                let ffi_list = gen.gen_num(self.iptr());
+                let ptr = gen.gen_num(self.iptr());
+                ffi_rets.push(ptr.clone());
+                instr.push(Instr::CallFunction(format!("FfiList{}::new", ty), ret, ffi_list.clone()));
+                instr.push(Instr::LowerObject(ffi_list, ptr));
+            },
         }
     }
 
@@ -404,4 +412,5 @@ pub enum Instr {
     LowerTuple(Var, Vec<Var>),
     CallAbi(FunctionType, Option<Var>, String, Option<Var>, Vec<Var>),
     DefineRets(Vec<Var>),
+    CallFunction(String, Var, Var),
 }

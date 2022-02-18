@@ -92,6 +92,11 @@ pub mod api {
         });
     }
 
+    #[doc=" 'elementAt' method of list types returns a non owning reference"]
+    #[no_mangle]
+    pub extern "C" fn drop_box_Leak(_: i64, boxed: i64) {
+    }
+
     #[repr(transparent)]
     pub struct FfiIter<T: Send + 'static>(Box<dyn Iterator<Item = T> + Send + 'static>);
 
@@ -229,6 +234,14 @@ pub mod api {
     }
 
     #[no_mangle]
+    pub extern "C" fn __create_list() -> i64 {
+        panic_abort(move || {
+            let tmp0 = create_list();#[allow(unused_assignments)] let mut tmp2 = Default::default();let tmp1 = FfiListCustomType::new(tmp0);let tmp1_0 = assert_send_static(tmp1);
+            tmp2 = Box::into_raw(Box::new(tmp1_0)) as _;
+            tmp2
+        })
+    }
+    #[no_mangle]
     pub extern "C" fn __hello_world() {
         panic_abort(move || {
             hello_world();
@@ -340,6 +353,18 @@ pub mod api {
         })
     }
     #[no_mangle]
+    pub extern "C" fn __CustomType_get_n(tmp1: i64,) -> i32 {
+        panic_abort(move || {
+            let tmp0 = unsafe { &mut *(tmp1 as *mut CustomType) };let tmp2 = tmp0.get_n();#[allow(unused_assignments)] let mut tmp3 = Default::default();tmp3 = tmp2 as _;
+            tmp3
+        })
+    }
+    #[no_mangle]
+    pub extern "C" fn drop_box_CustomType(_: i64, boxed: i64) {
+        panic_abort(move || {
+            unsafe { Box::<CustomType>::from_raw(boxed as *mut _) };
+        });
+    }#[no_mangle]
     pub extern "C" fn __DataTest_get_copy(tmp1: i64,) -> __DataTest_get_copyReturn {
         panic_abort(move || {
             let tmp0 = unsafe { &mut *(tmp1 as *mut DataTest) };let tmp2 = tmp0.get_copy();#[allow(unused_assignments)] let mut tmp3 = Default::default();#[allow(unused_assignments)] let mut tmp4 = Default::default();#[allow(unused_assignments)] let mut tmp5 = Default::default();let tmp2_0 = ManuallyDrop::new(tmp2);
@@ -404,5 +429,56 @@ pub mod api {
         panic_abort(move || {
             unsafe { Box::<FfiFuture<Result<u8>>>::from_raw(boxed as *mut _) };
         });
+    }
+    pub struct FfiListCustomType {
+        data: Vec<CustomType>,
+    }
+
+    impl FfiListCustomType {
+        fn new(data: Vec<CustomType>) -> Self {
+            Self { data }
+        }
+
+        fn len(&self) -> u32 {
+            self.data.len() as _
+        }
+
+        fn element_at(&self, idx: u32) -> Option<&CustomType> {
+            self.data.get(idx as usize)
+        }
+    }
+    #[no_mangle]
+    pub extern "C" fn __FfiListCustomTypeCreate() -> usize {
+        panic_abort(move || unsafe {
+            let list = Box::new(FfiListCustomType::new(vec![]));
+            Box::into_raw(list) as _
+        })
+    }
+
+    #[no_mangle]
+    pub extern "C" fn drop_box_FfiListCustomType(_: i64, boxed: i64) {
+        panic_abort(move || unsafe {
+            Box::<FfiListCustomType>::from_raw(boxed as _);
+        })
+    }
+
+    #[no_mangle]
+    pub extern "C" fn __FfiListCustomTypeLen(boxed: usize) -> u32 {
+        panic_abort(move || unsafe {
+            let list = Box::<FfiListCustomType>::from_raw(boxed as _);
+            let result = list.len();
+            Box::into_raw(list);
+            result as _
+        })
+    }
+
+    #[no_mangle]
+    pub extern "C" fn __FfiListCustomTypeElementAt(boxed: usize, index: u32) -> usize {
+        panic_abort(move || unsafe {
+            let list = Box::<FfiListCustomType>::from_raw(boxed as _);
+            let result = list.element_at(index).unwrap() as *const _;
+            Box::into_raw(list);
+            result as _
+        })
     }
 }
