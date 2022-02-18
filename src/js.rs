@@ -894,6 +894,7 @@ pub mod test_runner {
         };
 
         let library = library_tokens.to_file_string()?;
+        writeln!(rust_file, "#![feature(vec_into_raw_parts)]")?;
         rust_file.write_all(library.as_bytes())?;
         let bin = bin_tokens.to_file_string()?;
         js_file.write_all(bin.as_bytes())?;

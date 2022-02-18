@@ -728,6 +728,7 @@ pub mod test_runner {
         };
         let res = tokens.to_file_string()?;
         let mut tmp = NamedTempFile::new()?;
+        writeln!(tmp, "#![feature(vec_into_raw_parts)]")?;
         tmp.write_all(res.as_bytes())?;
         //println!("{}", res);
         let test = TestCases::new();

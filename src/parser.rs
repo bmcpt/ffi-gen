@@ -208,7 +208,10 @@ impl Type {
             },
             Rule::buffer => Type::Buffer({
                 let chars = pair.as_str().chars();
-                let inner_chars = chars.skip_while(|&c| c != '<').skip(1).take_while(|&c| c != '>');
+                let inner_chars = chars
+                    .skip_while(|&c| c != '<')
+                    .skip(1)
+                    .take_while(|&c| c != '>');
                 let inner_s: String = inner_chars.collect();
                 let inner = match inner_s.as_str() {
                     "u8" => Type::U8,

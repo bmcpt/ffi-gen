@@ -1,9 +1,9 @@
 #![feature(vec_into_raw_parts)]
-#![allow(unused)]
+#![allow(unused, clippy::transmutes_expressible_as_ptr_casts)]
 
 use anyhow::Result;
-use std::io::Read;
 use futures::Stream;
+use std::io::Read;
 
 mod bindings;
 use bindings::api;
@@ -13,7 +13,13 @@ const URL: &str = "https://file-examples-com.github.io/uploads/2017/10/file_exam
 
 fn get_image() -> api::FfiBuffer<u8> {
     let mut bytes = vec![];
-    ureq::get(URL).call().unwrap().into_reader().take(u64::MAX).read_to_end(&mut bytes).unwrap();
+    ureq::get(URL)
+        .call()
+        .unwrap()
+        .into_reader()
+        .take(u64::MAX)
+        .read_to_end(&mut bytes)
+        .unwrap();
     api::FfiBuffer::new(bytes)
 }
 
@@ -25,7 +31,11 @@ struct DataTest {
 
 fn create(n: usize) -> DataTest {
     let mut bytes = Vec::with_capacity(n);
-    std::fs::File::open(RF).unwrap().take(n as u64).read_to_end(&mut bytes).unwrap();
+    std::fs::File::open(RF)
+        .unwrap()
+        .take(n as u64)
+        .read_to_end(&mut bytes)
+        .unwrap();
     DataTest { bytes }
 }
 
@@ -46,7 +56,8 @@ macro_rules! gen_counting_func {
                 api::FfiBuffer::new((0..n).map(|n| n as $ty).collect())
             }
         }
-    }}
+    };
+}
 
 gen_counting_func!(u8);
 gen_counting_func!(u16);
@@ -66,7 +77,7 @@ extern "C" {
 
 fn log(msg: &str) {
     #[cfg(target_family = "wasm")]
-        return unsafe { __console_log(msg.as_ptr() as _, msg.len()) };
+    return unsafe { __console_log(msg.as_ptr() as _, msg.len()) };
     #[cfg(not(target_family = "wasm"))]
     println!("{}", msg);
 }

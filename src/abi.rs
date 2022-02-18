@@ -327,7 +327,7 @@ impl Interface {
                         }
                         AbiType::Iter(ty) => {
                             iterators.push(AbiIter {
-                                ty: (&**ty).clone(),
+                                ty: (**ty).clone(),
                                 symbol,
                             });
                             break;
@@ -355,7 +355,7 @@ impl Interface {
                         AbiType::Future(ty) => {
                             let symbol = func.symbol();
                             futures.push(AbiFuture {
-                                ty: (&**ty).clone(),
+                                ty: (**ty).clone(),
                                 symbol,
                             });
                             break;
@@ -383,7 +383,7 @@ impl Interface {
                         AbiType::Stream(ty) => {
                             let symbol = func.symbol();
                             streams.push(AbiStream {
-                                ty: (&**ty).clone(),
+                                ty: (**ty).clone(),
                                 symbol,
                             });
                             break;

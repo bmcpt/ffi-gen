@@ -310,6 +310,27 @@ class Iter<T> extends Iterable<T> implements Iterator<T> {
   }
 }
 
+abstract class CustomIterable<T> {
+  int get length;
+  T elementAt(int index);
+}
+
+class CustomIterator<T, U extends CustomIterable<T>> implements Iterator<T> {
+  final U _iterable;
+  int _currentIndex = -1;
+
+  CustomIterator(this._iterable);
+
+  @override
+  T get current => _iterable.elementAt(_currentIndex);
+
+  @override
+  bool moveNext() {
+    _currentIndex++;
+    return _currentIndex < _iterable.length;
+  }
+}
+
 Future<T> _nativeFuture<T>(_Box box, T? Function(int, int, int) nativePoll) {
   final completer = Completer<T>();
   final rx = ReceivePort();
@@ -1067,28 +1088,8 @@ class _AsyncHelloWorldFuturePollReturn extends ffi.Struct {
   external int arg5;
 }
 
-abstract class CustomIterable<T> {
-  int get length;
-  T elementAt(int index);
-}
-
-class CustomIterator<T, U extends CustomIterable<T>> implements Iterator<T> {
-  final U _iterable;
-  int _currentIndex = -1;
-
-  CustomIterator(this._iterable);
-
-  @override
-  T get current => _iterable.elementAt(_currentIndex);
-
-  @override
-  bool moveNext() {
-    _currentIndex++;
-    return _currentIndex < _iterable.length;
-  }
-}
-
-class FfiListCustomType extends Iterable<CustomType> implements CustomIterable<CustomType> {
+class FfiListCustomType extends Iterable<CustomType>
+    implements CustomIterable<CustomType> {
   final Api _api;
   final _Box _box;
 
@@ -1110,7 +1111,7 @@ class FfiListCustomType extends Iterable<CustomType> implements CustomIterable<C
     return CustomType._(_api, reference);
   }
 
-  CustomType operator[](int index) {
+  CustomType operator [](int index) {
     return elementAt(index);
   }
 

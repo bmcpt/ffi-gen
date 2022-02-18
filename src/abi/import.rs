@@ -1,6 +1,6 @@
 use super::VarGen;
-use crate::{Abi, AbiFunction, AbiType, FunctionType, NumType, Return, Var};
 use crate::dart::ffi_buffer_name_for;
+use crate::{Abi, AbiFunction, AbiType, FunctionType, NumType, Return, Var};
 
 #[derive(Clone, Debug)]
 pub struct Import {
@@ -19,7 +19,7 @@ impl Abi {
         gen: &mut VarGen,
         ffi_args: &mut Vec<Var>,
         instr: &mut Vec<Instr>,
-        instr_cleanup: &mut Vec<Instr>,
+        #[allow(clippy::ptr_arg)] instr_cleanup: &mut Vec<Instr>,
     ) {
         match &arg.ty {
             AbiType::Num(num)
@@ -165,7 +165,7 @@ impl Abi {
             }
             AbiType::Option(ty) => {
                 let var = gen.gen_num(NumType::U8);
-                let some = gen.gen((&**ty).clone());
+                let some = gen.gen((**ty).clone());
                 ffi_args.push(var.clone());
                 let mut some_instr = vec![];
                 self.import_arg(some.clone(), gen, ffi_args, &mut some_instr, instr_cleanup);
@@ -308,7 +308,12 @@ impl Abi {
                 let buf_ptr = gen.gen_num(self.iptr());
                 ffi_rets.push(buf_ptr.clone());
                 let ffi_buf = gen.gen_num(self.iptr());
-                instr.push(Instr::LiftObject(ffi_buffer_name_for(*ty).to_string(), buf_ptr.clone(), "drop_box_FfiBuffer".to_string(), ffi_buf.clone()));
+                instr.push(Instr::LiftObject(
+                    ffi_buffer_name_for(*ty).to_string(),
+                    buf_ptr,
+                    "drop_box_FfiBuffer".to_string(),
+                    ffi_buf.clone(),
+                ));
                 instr.push(Instr::LiftNum(ffi_buf, out, self.iptr()));
             },
             AbiType::List(ty) => {
