@@ -142,7 +142,14 @@ impl Abi {
                 instr.push(Instr::LiftTuple(vars, out));
             }
             AbiType::Buffer(_) => unimplemented!("\"buffer\" can only be used as return value"),
-            AbiType::List(_) => todo!(),
+            AbiType::List(ty) => {
+                let ptr = gen.gen_num(self.iptr());
+                ffi_args.push(ptr.clone());
+                let wrapper = gen.gen_num(self.iptr());
+
+                instr.push(Instr::LiftObject(ptr.clone(), wrapper.clone(), format!("FfiList{}", ty)));
+                instr.push(Instr::MoveProperty(wrapper.clone(), out.clone(), "data".to_string()));
+            },
         }
     }
 
@@ -413,4 +420,5 @@ pub enum Instr {
     CallAbi(FunctionType, Option<Var>, String, Option<Var>, Vec<Var>),
     DefineRets(Vec<Var>),
     CallFunction(String, Var, Var),
+    MoveProperty(Var, Var, String),
 }

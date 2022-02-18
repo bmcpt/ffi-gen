@@ -80,6 +80,7 @@ pub async fn async_hello_world() -> Result<u8> {
     Ok(0)
 }
 
+#[derive(Debug)]
 struct CustomType {
     n: i32,
 }
@@ -100,6 +101,6 @@ fn create_list() -> Vec<CustomType> {
     ]
 }
 
-fn t() -> CustomType {
-    CustomType {n: 0}
+fn sum_list(l: Vec<CustomType>) -> u32 {
+    l.into_iter().reduce(|a, b| CustomType { n: a.n + b.n }).unwrap().n as _
 }

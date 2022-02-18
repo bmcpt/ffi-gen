@@ -637,6 +637,9 @@ impl RustGenerator {
             Instr::CallFunction(name, in_, out_) => {
                 quote!(let #(self.var(out_)) = #(name)(#(self.var(in_)));)
             }
+            Instr::MoveProperty(in_, out_, name) => {
+                quote!(let #(self.var(out_)) = #(self.var(in_)).#name;)
+            }
         }
     }
 

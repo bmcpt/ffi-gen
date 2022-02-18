@@ -445,17 +445,6 @@ class Api {
     _deallocate(pointer.cast(), byteCount, alignment);
   }
 
-  FfiListCustomType createList() {
-    final tmp0 = _createList();
-    final tmp2 = tmp0;
-    final ffi.Pointer<ffi.Void> tmp2_0 = ffi.Pointer.fromAddress(tmp2);
-    final tmp2_1 = _Box(this, tmp2_0, "drop_box_FfiListCustomType");
-    tmp2_1._finalizer = this._registerFinalizer(tmp2_1);
-    final tmp3 = FfiListCustomType._(this, tmp2_1);
-    final tmp1 = tmp3;
-    return tmp1;
-  }
-
   void helloWorld() {
     _helloWorld();
     return;
@@ -679,6 +668,31 @@ class Api {
     return tmp3;
   }
 
+  FfiListCustomType createList() {
+    final tmp0 = _createList();
+    final tmp2 = tmp0;
+    final ffi.Pointer<ffi.Void> tmp2_0 = ffi.Pointer.fromAddress(tmp2);
+    final tmp2_1 = _Box(this, tmp2_0, "drop_box_FfiListCustomType");
+    tmp2_1._finalizer = this._registerFinalizer(tmp2_1);
+    final tmp3 = FfiListCustomType._(this, tmp2_1);
+    final tmp1 = tmp3;
+    return tmp1;
+  }
+
+  int sumList(
+    FfiListCustomType l,
+  ) {
+    final tmp0 = l;
+    var tmp1 = 0;
+    tmp1 = tmp0._box.move();
+    final tmp2 = _sumList(
+      tmp1,
+    );
+    final tmp4 = tmp2;
+    final tmp3 = tmp4;
+    return tmp3;
+  }
+
   late final _allocatePtr = _lookup<
       ffi.NativeFunction<
           ffi.Pointer<ffi.Uint8> Function(ffi.IntPtr, ffi.IntPtr)>>("allocate");
@@ -749,10 +763,6 @@ class Api {
     return tmp7;
   }
 
-  late final _createListPtr =
-      _lookup<ffi.NativeFunction<ffi.Int64 Function()>>("__create_list");
-
-  late final _createList = _createListPtr.asFunction<int Function()>();
   late final _helloWorldPtr =
       _lookup<ffi.NativeFunction<ffi.Void Function()>>("__hello_world");
 
@@ -876,13 +886,17 @@ class Api {
       int Function(
     int,
   )>();
-  late final _customTypeGetNPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Int32 Function(
-    ffi.Int64,
-  )>>("__CustomType_get_n");
+  late final _createListPtr =
+      _lookup<ffi.NativeFunction<ffi.Int64 Function()>>("__create_list");
 
-  late final _customTypeGetN = _customTypeGetNPtr.asFunction<
+  late final _createList = _createListPtr.asFunction<int Function()>();
+  late final _sumListPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Uint32 Function(
+    ffi.Int64,
+  )>>("__sum_list");
+
+  late final _sumList = _sumListPtr.asFunction<
       int Function(
     int,
   )>();
@@ -903,6 +917,16 @@ class Api {
   )>>("__DataTest_get_shmem");
 
   late final _dataTestGetShmem = _dataTestGetShmemPtr.asFunction<
+      int Function(
+    int,
+  )>();
+  late final _customTypeGetNPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int32 Function(
+    ffi.Int64,
+  )>>("__CustomType_get_n");
+
+  late final _customTypeGetN = _customTypeGetNPtr.asFunction<
       int Function(
     int,
   )>();
@@ -948,29 +972,6 @@ class Api {
 
   late final _ffiListCustomTypeElementAt =
       _ffiListCustomTypeElementAtPtr.asFunction<int Function(int, int)>();
-}
-
-class CustomType {
-  final Api _api;
-  final _Box _box;
-
-  CustomType._(this._api, this._box);
-
-  int getN() {
-    var tmp0 = 0;
-    tmp0 = _box.borrow();
-    final tmp1 = _api._customTypeGetN(
-      tmp0,
-    );
-    final tmp3 = tmp1;
-    final tmp2 = tmp3;
-    return tmp2;
-  }
-
-  /// Manually drops the object and unregisters the FinalizableHandle.
-  void drop() {
-    _box.drop();
-  }
 }
 
 class DataTest {
@@ -1019,6 +1020,29 @@ class DataTest {
   }
 }
 
+class CustomType {
+  final Api _api;
+  final _Box _box;
+
+  CustomType._(this._api, this._box);
+
+  int getN() {
+    var tmp0 = 0;
+    tmp0 = _box.borrow();
+    final tmp1 = _api._customTypeGetN(
+      tmp0,
+    );
+    final tmp3 = tmp1;
+    final tmp2 = tmp3;
+    return tmp2;
+  }
+
+  /// Manually drops the object and unregisters the FinalizableHandle.
+  void drop() {
+    _box.drop();
+  }
+}
+
 class _DataTestGetCopyReturn extends ffi.Struct {
   @ffi.Int64()
   external int arg0;
@@ -1043,16 +1067,42 @@ class _AsyncHelloWorldFuturePollReturn extends ffi.Struct {
   external int arg5;
 }
 
-class FfiListCustomType {
+abstract class CustomIterable<T> {
+  int get length;
+  T elementAt(int index);
+}
+
+class CustomIterator<T, U extends CustomIterable<T>> implements Iterator<T> {
+  final U _iterable;
+  int _currentIndex = -1;
+
+  CustomIterator(this._iterable);
+
+  @override
+  T get current => _iterable.elementAt(_currentIndex);
+
+  @override
+  bool moveNext() {
+    _currentIndex++;
+    return _currentIndex < _iterable.length;
+  }
+}
+
+class FfiListCustomType extends Iterable<CustomType> implements CustomIterable<CustomType> {
   final Api _api;
   final _Box _box;
 
   FfiListCustomType._(this._api, this._box);
 
+  @override
+  Iterator<CustomType> get iterator => CustomIterator(this);
+
+  @override
   int get length {
     return _api._ffiListCustomTypeLen(_box.borrow());
   }
 
+  @override
   CustomType elementAt(int index) {
     final address = _api._ffiListCustomTypeElementAt(_box.borrow(), index);
     final reference =

@@ -153,6 +153,27 @@ impl DartGenerator {
                 }
             }
 
+            abstract class CustomIterable<T> {
+              int get length;
+              T elementAt(int index);
+            }
+
+            class CustomIterator<T, U extends CustomIterable<T>> implements Iterator<T> {
+              final U _iterable;
+              int _currentIndex = -1;
+
+              CustomIterator(this._iterable);
+
+              @override
+              T get current => _iterable.elementAt(_currentIndex);
+
+              @override
+              bool moveNext() {
+                _currentIndex++;
+                return _currentIndex < _iterable.length;
+              }
+            }
+
             Future<T> _nativeFuture<T>(_Box box, T? Function(int, int, int) nativePoll) {
                 final completer = Completer<T>();
                 final rx = ReceivePort();
@@ -361,16 +382,21 @@ impl DartGenerator {
         let list_name_s = format!("FfiList{}", ty);
         let list_name = list_name_s.as_str();
         quote!(
-            class #list_name {
+            class #list_name extends Iterable<#ty> implements CustomIterable<#ty> {
                 final Api _api;
                 final _Box _box;
 
                 #list_name._(this._api, this._box);
 
+                @override
+                Iterator<CustomType> get iterator => CustomIterator(this);
+
+                @override
                 int get length {
                     return _api.#(format!("_ffiList{}Len", ty))(_box.borrow());
                 }
 
+                @override
                 #ty elementAt(int index) {
                     final address = _api.#(format!("_ffiList{}ElementAt", ty))(_box.borrow(), index);
                     final reference = _Box(_api, ffi.Pointer.fromAddress(address), "drop_box_Leak");

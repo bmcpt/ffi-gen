@@ -174,7 +174,11 @@ impl Abi {
             AbiType::Tuple(_) => unreachable!(),
             AbiType::Result(_) => todo!(),
             AbiType::Buffer(_) => unimplemented!("\"buffer\" can only be used as return value"),
-            AbiType::List(_) => todo!(),
+            AbiType::List(ty) => {
+                let ptr = gen.gen_num(self.iptr());
+                instr.push(Instr::MoveObject(arg.clone(), ptr.clone()));
+                ffi_args.push(ptr);
+            },
         }
     }
 

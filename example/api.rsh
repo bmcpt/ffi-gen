@@ -23,7 +23,8 @@ fn get_f64_counting(n: usize) -> buffer<f64>;
 
 fn create_list() -> Vec<CustomType>;
 
+fn sum_list(l: Vec<CustomType>) -> u32;
+
 object CustomType {
     fn get_n() -> i32;
 }
-
