@@ -1110,6 +1110,10 @@ class FfiListCustomType extends Iterable<CustomType> implements CustomIterable<C
     return CustomType._(_api, reference);
   }
 
+  CustomType operator[](int index) {
+    return elementAt(index);
+  }
+
   void drop() {
     _box.drop();
   }

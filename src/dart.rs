@@ -389,7 +389,7 @@ impl DartGenerator {
                 #list_name._(this._api, this._box);
 
                 @override
-                Iterator<CustomType> get iterator => CustomIterator(this);
+                Iterator<#ty> get iterator => CustomIterator(this);
 
                 @override
                 int get length {
@@ -401,6 +401,10 @@ impl DartGenerator {
                     final address = _api.#(format!("_ffiList{}ElementAt", ty))(_box.borrow(), index);
                     final reference = _Box(_api, ffi.Pointer.fromAddress(address), "drop_box_Leak");
                     return #ty._(_api, reference);
+                }
+
+                #ty operator[](int index) {
+                  return elementAt(index);
                 }
 
                 void drop() {

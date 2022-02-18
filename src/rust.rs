@@ -328,7 +328,7 @@ impl RustGenerator {
                     self.data.len() as _
                 }
 
-                fn element_at(&self, idx: u32) -> Option<&CustomType> {
+                fn element_at(&self, idx: u32) -> Option<&#ty> {
                     self.data.get(idx as usize)
                 }
             }
