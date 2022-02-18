@@ -1,5 +1,5 @@
-use std::collections::HashSet;
 use crate::parser::{Interface, Type};
+use std::collections::HashSet;
 
 pub mod export;
 pub mod import;

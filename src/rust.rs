@@ -27,6 +27,7 @@ impl RustGenerator {
         quote! {
         #[allow(unused)]
         pub mod api {
+            #![allow(clippy::all)]
             use core::future::Future;
             use core::mem::ManuallyDrop;
             use core::pin::Pin;
@@ -271,7 +272,7 @@ impl RustGenerator {
     }
 
     fn generate_list_type_methods(&self, ty: &str) -> rust::Tokens {
-        let name_s = (format!("FfiList{}", ty));
+        let name_s = format!("FfiList{}", ty);
         let name = name_s.as_str();
         quote!(
             #[no_mangle]

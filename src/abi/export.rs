@@ -147,9 +147,17 @@ impl Abi {
                 ffi_args.push(ptr.clone());
                 let wrapper = gen.gen_num(self.iptr());
 
-                instr.push(Instr::LiftObject(ptr.clone(), wrapper.clone(), format!("FfiList{}", ty)));
-                instr.push(Instr::MoveProperty(wrapper.clone(), out.clone(), "data".to_string()));
-            },
+                instr.push(Instr::LiftObject(
+                    ptr,
+                    wrapper.clone(),
+                    format!("FfiList{}", ty),
+                ));
+                instr.push(Instr::MoveProperty(
+                    wrapper,
+                    out.clone(),
+                    "data".to_string(),
+                ));
+            }
         }
     }
 
@@ -298,14 +306,18 @@ impl Abi {
                 let ptr = gen.gen_num(self.iptr());
                 ffi_rets.push(ptr.clone());
                 instr.push(Instr::LowerObject(ret, ptr));
-            },
+            }
             AbiType::List(ty) => {
                 let ffi_list = gen.gen_num(self.iptr());
                 let ptr = gen.gen_num(self.iptr());
                 ffi_rets.push(ptr.clone());
-                instr.push(Instr::CallFunction(format!("FfiList{}::new", ty), ret, ffi_list.clone()));
+                instr.push(Instr::CallFunction(
+                    format!("FfiList{}::new", ty),
+                    ret,
+                    ffi_list.clone(),
+                ));
                 instr.push(Instr::LowerObject(ffi_list, ptr));
-            },
+            }
         }
     }
 

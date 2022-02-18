@@ -174,11 +174,11 @@ impl Abi {
             AbiType::Tuple(_) => unreachable!(),
             AbiType::Result(_) => todo!(),
             AbiType::Buffer(_) => unimplemented!("\"buffer\" can only be used as return value"),
-            AbiType::List(ty) => {
+            AbiType::List(_ty) => {
                 let ptr = gen.gen_num(self.iptr());
                 instr.push(Instr::MoveObject(arg.clone(), ptr.clone()));
                 ffi_args.push(ptr);
-            },
+            }
         }
     }
 
@@ -315,14 +315,19 @@ impl Abi {
                     ffi_buf.clone(),
                 ));
                 instr.push(Instr::LiftNum(ffi_buf, out, self.iptr()));
-            },
+            }
             AbiType::List(ty) => {
                 let buf_ptr = gen.gen_num(self.iptr());
                 ffi_rets.push(buf_ptr.clone());
                 let ffi_buf = gen.gen_num(self.iptr());
-                instr.push(Instr::LiftObject(format!("FfiList{}", ty), buf_ptr.clone(), format!("drop_box_FfiList{}", ty), ffi_buf.clone()));
+                instr.push(Instr::LiftObject(
+                    format!("FfiList{}", ty),
+                    buf_ptr,
+                    format!("drop_box_FfiList{}", ty),
+                    ffi_buf.clone(),
+                ));
                 instr.push(Instr::LiftNum(ffi_buf, out, self.iptr()));
-            },
+            }
         }
     }
 
