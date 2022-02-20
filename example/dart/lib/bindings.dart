@@ -51,10 +51,12 @@ class _Box {
   bool _dropped;
   bool _moved;
   ffi.Pointer<ffi.Void> _finalizer = ffi.Pointer.fromAddress(0);
+  final Object? _context;
 
-  _Box(this._api, this._ptr, this._dropSymbol)
+  _Box(this._api, this._ptr, this._dropSymbol, {Object? context})
       : _dropped = false,
-        _moved = false;
+        _moved = false,
+        _context = context;
 
   late final _dropPtr = _api._lookup<
       ffi.NativeFunction<
@@ -1103,11 +1105,16 @@ class FfiListCustomType extends Iterable<CustomType>
     return _api._ffiListCustomTypeLen(_box.borrow());
   }
 
+  ///List object owns the elements, and objects returned by this method hold onto the list object ensuring the pointed to element isn/t dropped.
   @override
   CustomType elementAt(int index) {
     final address = _api._ffiListCustomTypeElementAt(_box.borrow(), index);
-    final reference =
-        _Box(_api, ffi.Pointer.fromAddress(address), "drop_box_Leak");
+    final reference = _Box(
+      _api,
+      ffi.Pointer.fromAddress(address),
+      "drop_box_Leak",
+      context: this,
+    );
     return CustomType._(_api, reference);
   }
 

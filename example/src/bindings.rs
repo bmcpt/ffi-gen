@@ -93,7 +93,6 @@ pub mod api {
         });
     }
 
-    #[doc = " 'elementAt' method of list types returns a non owning reference"]
     #[no_mangle]
     pub extern "C" fn drop_box_Leak(_: i64, boxed: i64) {}
 

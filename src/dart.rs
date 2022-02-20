@@ -75,8 +75,9 @@ impl DartGenerator {
                 bool _dropped;
                 bool _moved;
                 ffi.Pointer<ffi.Void> _finalizer = ffi.Pointer.fromAddress(0);
+                final Object? _context;
 
-                _Box(this._api, this._ptr, this._dropSymbol) : _dropped = false, _moved = false;
+                _Box(this._api, this._ptr, this._dropSymbol, {Object? context}) : _dropped = false, _moved = false, _context = context;
 
                 late final _dropPtr = _api._lookup<
                     ffi.NativeFunction<
@@ -396,10 +397,11 @@ impl DartGenerator {
                     return _api.#(format!("_ffiList{}Len", ty))(_box.borrow());
                 }
 
+                #(static_literal("///"))List object owns the elements, and objects returned by this method hold onto the list object ensuring the pointed to element isn/t dropped.
                 @override
                 #ty elementAt(int index) {
                     final address = _api.#(format!("_ffiList{}ElementAt", ty))(_box.borrow(), index);
-                    final reference = _Box(_api, ffi.Pointer.fromAddress(address), "drop_box_Leak");
+                    final reference = _Box(_api, ffi.Pointer.fromAddress(address), "drop_box_Leak", context: this,);
                     return #ty._(_api, reference);
                 }
 
