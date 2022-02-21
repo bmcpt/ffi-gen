@@ -51,10 +51,12 @@ class _Box {
   bool _dropped;
   bool _moved;
   ffi.Pointer<ffi.Void> _finalizer = ffi.Pointer.fromAddress(0);
+  final Object? _context;
 
-  _Box(this._api, this._ptr, this._dropSymbol)
+  _Box(this._api, this._ptr, this._dropSymbol, {Object? context})
       : _dropped = false,
-        _moved = false;
+        _moved = false,
+        _context = context;
 
   late final _dropPtr = _api._lookup<
       ffi.NativeFunction<
@@ -307,6 +309,27 @@ class Iter<T> extends Iterable<T> implements Iterator<T> {
 
   void drop() {
     _box.drop();
+  }
+}
+
+abstract class CustomIterable<T> {
+  int get length;
+  T elementAt(int index);
+}
+
+class CustomIterator<T, U extends CustomIterable<T>> implements Iterator<T> {
+  final U _iterable;
+  int _currentIndex = -1;
+
+  CustomIterator(this._iterable);
+
+  @override
+  T get current => _iterable.elementAt(_currentIndex);
+
+  @override
+  bool moveNext() {
+    _currentIndex++;
+    return _currentIndex < _iterable.length;
   }
 }
 
@@ -668,6 +691,31 @@ class Api {
     return tmp3;
   }
 
+  FfiListCustomType createList() {
+    final tmp0 = _createList();
+    final tmp2 = tmp0;
+    final ffi.Pointer<ffi.Void> tmp2_0 = ffi.Pointer.fromAddress(tmp2);
+    final tmp2_1 = _Box(this, tmp2_0, "drop_box_FfiListCustomType");
+    tmp2_1._finalizer = this._registerFinalizer(tmp2_1);
+    final tmp3 = FfiListCustomType._(this, tmp2_1);
+    final tmp1 = tmp3;
+    return tmp1;
+  }
+
+  int sumList(
+    FfiListCustomType l,
+  ) {
+    final tmp0 = l;
+    var tmp1 = 0;
+    tmp1 = tmp0._box.move();
+    final tmp2 = _sumList(
+      tmp1,
+    );
+    final tmp4 = tmp2;
+    final tmp3 = tmp4;
+    return tmp3;
+  }
+
   late final _allocatePtr = _lookup<
       ffi.NativeFunction<
           ffi.Pointer<ffi.Uint8> Function(ffi.IntPtr, ffi.IntPtr)>>("allocate");
@@ -861,6 +909,20 @@ class Api {
       int Function(
     int,
   )>();
+  late final _createListPtr =
+      _lookup<ffi.NativeFunction<ffi.Int64 Function()>>("__create_list");
+
+  late final _createList = _createListPtr.asFunction<int Function()>();
+  late final _sumListPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Uint32 Function(
+    ffi.Int64,
+  )>>("__sum_list");
+
+  late final _sumList = _sumListPtr.asFunction<
+      int Function(
+    int,
+  )>();
   late final _dataTestGetCopyPtr = _lookup<
       ffi.NativeFunction<
           _DataTestGetCopyReturn Function(
@@ -881,6 +943,16 @@ class Api {
       int Function(
     int,
   )>();
+  late final _customTypeGetNPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int32 Function(
+    ffi.Int64,
+  )>>("__CustomType_get_n");
+
+  late final _customTypeGetN = _customTypeGetNPtr.asFunction<
+      int Function(
+    int,
+  )>();
   late final _asyncHelloWorldFuturePollPtr = _lookup<
       ffi.NativeFunction<
           _AsyncHelloWorldFuturePollReturn Function(
@@ -896,6 +968,33 @@ class Api {
     int,
     int,
   )>();
+  FfiListCustomType createFfiListCustomType() {
+    final ffi.Pointer<ffi.Void> list_ptr =
+        ffi.Pointer.fromAddress(_ffiListCustomTypeCreate());
+    final list_box = _Box(this, list_ptr, "drop_box_FfiListCustomType");
+    return FfiListCustomType._(this, list_box);
+  }
+
+  late final _ffiListCustomTypeCreatePtr =
+      _lookup<ffi.NativeFunction<ffi.IntPtr Function()>>(
+          "__FfiListCustomTypeCreate");
+
+  late final _ffiListCustomTypeCreate =
+      _ffiListCustomTypeCreatePtr.asFunction<int Function()>();
+
+  late final _ffiListCustomTypeLenPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint32 Function(ffi.IntPtr)>>(
+          "__FfiListCustomTypeLen");
+
+  late final _ffiListCustomTypeLen =
+      _ffiListCustomTypeLenPtr.asFunction<int Function(int)>();
+
+  late final _ffiListCustomTypeElementAtPtr =
+      _lookup<ffi.NativeFunction<ffi.IntPtr Function(ffi.IntPtr, ffi.Uint32)>>(
+          "__FfiListCustomTypeElementAt");
+
+  late final _ffiListCustomTypeElementAt =
+      _ffiListCustomTypeElementAtPtr.asFunction<int Function(int, int)>();
 }
 
 class DataTest {
@@ -944,6 +1043,29 @@ class DataTest {
   }
 }
 
+class CustomType {
+  final Api _api;
+  final _Box _box;
+
+  CustomType._(this._api, this._box);
+
+  int getN() {
+    var tmp0 = 0;
+    tmp0 = _box.borrow();
+    final tmp1 = _api._customTypeGetN(
+      tmp0,
+    );
+    final tmp3 = tmp1;
+    final tmp2 = tmp3;
+    return tmp2;
+  }
+
+  /// Manually drops the object and unregisters the FinalizableHandle.
+  void drop() {
+    _box.drop();
+  }
+}
+
 class _DataTestGetCopyReturn extends ffi.Struct {
   @ffi.Int64()
   external int arg0;
@@ -966,4 +1088,41 @@ class _AsyncHelloWorldFuturePollReturn extends ffi.Struct {
   external int arg4;
   @ffi.Uint8()
   external int arg5;
+}
+
+class FfiListCustomType extends Iterable<CustomType>
+    implements CustomIterable<CustomType> {
+  final Api _api;
+  final _Box _box;
+
+  FfiListCustomType._(this._api, this._box);
+
+  @override
+  Iterator<CustomType> get iterator => CustomIterator(this);
+
+  @override
+  int get length {
+    return _api._ffiListCustomTypeLen(_box.borrow());
+  }
+
+  ///List object owns the elements, and objects returned by this method hold onto the list object ensuring the pointed to element isn/t dropped.
+  @override
+  CustomType elementAt(int index) {
+    final address = _api._ffiListCustomTypeElementAt(_box.borrow(), index);
+    final reference = _Box(
+      _api,
+      ffi.Pointer.fromAddress(address),
+      "drop_box_Leak",
+      context: this,
+    );
+    return CustomType._(_api, reference);
+  }
+
+  CustomType operator [](int index) {
+    return elementAt(index);
+  }
+
+  void drop() {
+    _box.drop();
+  }
 }

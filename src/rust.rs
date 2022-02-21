@@ -27,6 +27,7 @@ impl RustGenerator {
         quote! {
         #[allow(unused)]
         pub mod api {
+            #![allow(clippy::all)]
             use core::future::Future;
             use core::mem::ManuallyDrop;
             use core::pin::Pin;
@@ -115,6 +116,10 @@ impl RustGenerator {
                 panic_abort(move || {
                     unsafe { Box::<FfiBuffer<u8>>::from_raw(boxed as *mut _) };
                 });
+            }
+
+            #[no_mangle]
+            pub extern "C" fn drop_box_Leak(_: i64, boxed: i64) {
             }
 
             #[repr(transparent)]
@@ -259,8 +264,75 @@ impl RustGenerator {
             #(for iter in iface.iterators() => #(self.generate_iterator(&iter)))
             #(for fut in iface.futures() => #(self.generate_future(&fut)))
             #(for stream in iface.streams() => #(self.generate_stream(&stream)))
+            #(for ty in iface.listed_types() => #(self.generate_list_type(ty.as_str())))
+            #(for ty in iface.listed_types() => #(self.generate_list_type_methods(ty.as_str())))
         }
         }
+    }
+
+    fn generate_list_type_methods(&self, ty: &str) -> rust::Tokens {
+        let name_s = format!("FfiList{}", ty);
+        let name = name_s.as_str();
+        quote!(
+            #[no_mangle]
+            pub extern "C" fn #(format!("__{}Create", name))() -> usize {
+                panic_abort(move || unsafe {
+                    let list = Box::new(#name::new(vec![]));
+                    Box::into_raw(list) as _
+                })
+            }
+
+            #[no_mangle]
+            pub extern "C" fn #(format!("drop_box_{}", name))(_: i64, boxed: i64) {
+                panic_abort(move || unsafe {
+                    Box::<#name>::from_raw(boxed as _);
+                })
+            }
+
+            #[no_mangle]
+            pub extern "C" fn #(format!("__{}Len", name))(boxed: usize) -> u32 {
+                panic_abort(move || unsafe {
+                    let list = Box::<#(name)>::from_raw(boxed as _);
+                    let result = list.len();
+                    Box::into_raw(list);
+                    result as _
+                })
+            }
+
+            #[no_mangle]
+            pub extern "C" fn #(format!("__{}ElementAt", name))(boxed: usize, index: u32) -> usize {
+                panic_abort(move || unsafe {
+                    let list = Box::<#(name)>::from_raw(boxed as _);
+                    let result = list.element_at(index).unwrap() as *const _;
+                    Box::into_raw(list);
+                    result as _
+                })
+            }
+        )
+    }
+
+    fn generate_list_type(&self, ty: &str) -> rust::Tokens {
+        let name_s = format!("FfiList{}", ty);
+        let name = name_s.as_str();
+        quote!(
+            pub struct #(name) {
+                data: Vec<#(ty)>,
+            }
+
+            impl #(name) {
+                fn new(data: Vec<#(ty)>) -> Self {
+                    Self { data }
+                }
+
+                fn len(&self) -> u32 {
+                    self.data.len() as _
+                }
+
+                fn element_at(&self, idx: u32) -> Option<&#ty> {
+                    self.data.get(idx as usize)
+                }
+            }
+        )
     }
 
     fn generate_function(&self, func: &AbiFunction) -> rust::Tokens {
@@ -562,6 +634,12 @@ impl RustGenerator {
             Instr::DefineRets(vars) => quote! {
                 #(for var in vars => #[allow(unused_assignments)] let mut #(self.var(var)) = Default::default();)
             },
+            Instr::CallFunction(name, in_, out_) => {
+                quote!(let #(self.var(out_)) = #(name)(#(self.var(in_)));)
+            }
+            Instr::MoveProperty(in_, out_, name) => {
+                quote!(let #(self.var(out_)) = #(self.var(in_)).#name;)
+            }
         }
     }
 
@@ -591,6 +669,7 @@ impl RustGenerator {
             AbiType::RefStream(ty) => quote!(&impl Stream<Item = #(self.ty(ty))>),
             AbiType::Stream(ty) => quote!(impl Stream<Item = #(self.ty(ty))>),
             AbiType::Buffer(ty) => quote!(FfiBuffer<#(self.num_type(*ty))>),
+            AbiType::List(ty) => quote!(#(format!("FfiList{}", ty))),
         }
     }
 

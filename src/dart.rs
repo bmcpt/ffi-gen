@@ -75,8 +75,9 @@ impl DartGenerator {
                 bool _dropped;
                 bool _moved;
                 ffi.Pointer<ffi.Void> _finalizer = ffi.Pointer.fromAddress(0);
+                final Object? _context;
 
-                _Box(this._api, this._ptr, this._dropSymbol) : _dropped = false, _moved = false;
+                _Box(this._api, this._ptr, this._dropSymbol, {Object? context}) : _dropped = false, _moved = false, _context = context;
 
                 late final _dropPtr = _api._lookup<
                     ffi.NativeFunction<
@@ -151,6 +152,27 @@ impl DartGenerator {
                 void drop() {
                     _box.drop();
                 }
+            }
+
+            abstract class CustomIterable<T> {
+              int get length;
+              T elementAt(int index);
+            }
+
+            class CustomIterator<T, U extends CustomIterable<T>> implements Iterator<T> {
+              final U _iterable;
+              int _currentIndex = -1;
+
+              CustomIterator(this._iterable);
+
+              @override
+              T get current => _iterable.elementAt(_currentIndex);
+
+              @override
+              bool moveNext() {
+                _currentIndex++;
+                return _currentIndex < _iterable.length;
+              }
             }
 
             Future<T> _nativeFuture<T>(_Box box, T? Function(int, int, int) nativePoll) {
@@ -312,12 +334,86 @@ impl DartGenerator {
                 #(for stream in iface.streams() => #(self.generate_function(&stream.poll())))
 
                 #(for func in iface.imports(&self.abi) => #(self.generate_wrapper(func)))
+                #(for ty in iface.listed_types() => #(self.generate_list_methods(ty.as_str())))
             }
 
             #(for obj in iface.objects() => #(self.generate_object(obj)))
 
             #(for func in iface.imports(&self.abi) => #(self.generate_return_struct(&func.ffi_ret)))
+
+            #(for ty in iface.listed_types() => #(self.generate_list_type(ty.as_str())))
         }
+    }
+
+    fn generate_list_methods(&self, ty: &str) -> dart::Tokens {
+        let list_name_s = format!("FfiList{}", ty);
+        let list_name = list_name_s.as_str();
+        quote!(
+
+            #list_name #(format!("create{}", list_name))() {
+                final ffi.Pointer<ffi.Void> list_ptr = ffi.Pointer.fromAddress(#(format!("_ffiList{}Create", ty))());
+                final list_box = _Box(this, list_ptr, #(format!("\"drop_box_{}\"", list_name)));
+                return #list_name._(this, list_box);
+            }
+
+            late final #(format!("_ffiList{}CreatePtr", ty)) = _lookup<
+                ffi.NativeFunction<
+                    ffi.IntPtr Function()>>(#(format!("\"__{}Create\"", list_name)));
+
+            late final #(format!("_ffiList{}Create", ty)) = #(format!("_ffiList{}CreatePtr", ty)).asFunction<
+                int Function()>();
+
+            late final #(format!("_ffiList{}LenPtr", ty)) = _lookup<
+                ffi.NativeFunction<
+                    ffi.Uint32 Function(ffi.IntPtr)>>(#(format!("\"__{}Len\"", list_name)));
+
+            late final #(format!("_ffiList{}Len", ty)) = #(format!("_ffiList{}LenPtr", ty)).asFunction<
+                int Function(int)>();
+
+            late final #(format!("_ffiList{}ElementAtPtr", ty)) = _lookup<
+                ffi.NativeFunction<
+                    ffi.IntPtr Function(ffi.IntPtr, ffi.Uint32)>>(#(format!("\"__{}ElementAt\"", list_name)));
+
+            late final #(format!("_ffiList{}ElementAt", ty)) = #(format!("_ffiList{}ElementAtPtr", ty)).asFunction<
+                int Function(int, int)>();
+        )
+    }
+
+    fn generate_list_type(&self, ty: &str) -> dart::Tokens {
+        let list_name_s = format!("FfiList{}", ty);
+        let list_name = list_name_s.as_str();
+        quote!(
+            class #list_name extends Iterable<#ty> implements CustomIterable<#ty> {
+                final Api _api;
+                final _Box _box;
+
+                #list_name._(this._api, this._box);
+
+                @override
+                Iterator<#ty> get iterator => CustomIterator(this);
+
+                @override
+                int get length {
+                    return _api.#(format!("_ffiList{}Len", ty))(_box.borrow());
+                }
+
+                #(static_literal("///"))List object owns the elements, and objects returned by this method hold onto the list object ensuring the pointed to element isn/t dropped.
+                @override
+                #ty elementAt(int index) {
+                    final address = _api.#(format!("_ffiList{}ElementAt", ty))(_box.borrow(), index);
+                    final reference = _Box(_api, ffi.Pointer.fromAddress(address), "drop_box_Leak", context: this,);
+                    return #ty._(_api, reference);
+                }
+
+                #ty operator[](int index) {
+                  return elementAt(index);
+                }
+
+                void drop() {
+                  _box.drop();
+                }
+            }
+        )
     }
 
     fn generate_object(&self, obj: AbiObject) -> dart::Tokens {
@@ -622,6 +718,7 @@ impl DartGenerator {
                 quote!(Stream<#(self.generate_type(ty))>)
             }
             AbiType::Buffer(ty) => quote!(#(ffi_buffer_name_for(*ty))),
+            AbiType::List(ty) => quote!(#(format!("FfiList{}", ty))),
         }
     }
 

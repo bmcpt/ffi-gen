@@ -88,3 +88,31 @@ pub async fn async_hello_world() -> Result<u8> {
     log("hello world");
     Ok(0)
 }
+
+#[derive(Debug)]
+struct CustomType {
+    n: i32,
+}
+
+impl CustomType {
+    fn get_n(&self) -> i32 {
+        self.n
+    }
+}
+
+fn create_list() -> Vec<CustomType> {
+    vec![
+        CustomType { n: 5 },
+        CustomType { n: 4 },
+        CustomType { n: 3 },
+        CustomType { n: 2 },
+        CustomType { n: 1 },
+    ]
+}
+
+fn sum_list(l: Vec<CustomType>) -> u32 {
+    l.into_iter()
+        .reduce(|a, b| CustomType { n: a.n + b.n })
+        .unwrap()
+        .n as _
+}

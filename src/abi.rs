@@ -1,4 +1,5 @@
 use crate::parser::{Interface, Type};
+use std::collections::HashSet;
 
 pub mod export;
 pub mod import;
@@ -39,6 +40,7 @@ pub enum AbiType {
     Stream(Box<AbiType>),
     Tuple(Vec<AbiType>),
     Buffer(NumType),
+    List(String),
 }
 
 impl AbiType {
@@ -394,6 +396,29 @@ impl Interface {
         streams
     }
 
+    pub fn listed_types(&self) -> Vec<String> {
+        let mut res = HashSet::new();
+        let mut func_processor = |f: AbiFunction| {
+            if let Some(AbiType::List(ty)) = f.ret {
+                res.insert(ty);
+            }
+            for (_, ty) in f.args.iter() {
+                if let AbiType::List(ty) = ty {
+                    res.insert(ty.to_string());
+                }
+            }
+        };
+        for func in self.functions() {
+            func_processor(func);
+        }
+        for obj in self.objects() {
+            for func in obj.methods {
+                func_processor(func);
+            }
+        }
+        res.into_iter().collect()
+    }
+
     pub fn imports(&self, abi: &Abi) -> Vec<import::Import> {
         let mut imports = vec![];
         for function in self.functions() {
@@ -453,6 +478,7 @@ impl Interface {
             Type::Slice(_) => panic!("slice needs to be passed by reference"),
             Type::Vec(inner) => match self.to_type(inner) {
                 AbiType::Num(ty) => AbiType::Vec(ty),
+                AbiType::Object(ty) => AbiType::List(ty),
                 ty => unimplemented!("Vec<{:?}>", ty),
             },
             Type::Ident(ident) => {

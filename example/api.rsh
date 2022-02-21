@@ -20,3 +20,11 @@ fn get_i32_counting(n: usize) -> buffer<i32>;
 fn get_i64_counting(n: usize) -> buffer<i64>;
 fn get_f32_counting(n: usize) -> buffer<f32>;
 fn get_f64_counting(n: usize) -> buffer<f64>;
+
+fn create_list() -> Vec<CustomType>;
+
+fn sum_list(l: Vec<CustomType>) -> u32;
+
+object CustomType {
+    fn get_n() -> i32;
+}
