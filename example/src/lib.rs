@@ -5,9 +5,7 @@ use anyhow::Result;
 use futures::Stream;
 use std::io::Read;
 
-mod bindings;
-use bindings::api;
-// ffi_gen_macro::ffi_gen!("example/api.rsh");
+ffi_gen_macro::ffi_gen!("example/api.rsh");
 
 const URL: &str = "https://file-examples-com.github.io/uploads/2017/10/file_example_JPG_1MB.jpg";
 

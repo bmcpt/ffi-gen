@@ -13,15 +13,6 @@ fn main() {
         dir.join("build.rs").as_path().to_str().unwrap()
     );
     let ffigen = FfiGen::new(&path).unwrap();
-    let rust = dir.join("src").join("bindings.rs");
-    std::fs::write(
-        rust,
-        format!(
-            "use crate::*;\nuse futures::Stream;\n{}",
-            ffigen.generate_rust(Abi::Native64).unwrap()
-        ),
-    )
-    .unwrap();
     let dart = dir.join("dart").join("lib").join("bindings.dart");
     ffigen.generate_dart(dart, "api", "api").unwrap();
     // let js = dir.join("js").join("bindings.mjs");
