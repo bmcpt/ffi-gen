@@ -1,4 +1,4 @@
-use ffi_gen::{Abi, FfiGen};
+use ffi_gen::FfiGen;
 use std::path::PathBuf;
 
 fn main() {
