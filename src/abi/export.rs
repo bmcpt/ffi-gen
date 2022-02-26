@@ -145,7 +145,11 @@ impl Abi {
             AbiType::List(ty) => {
                 let ptr = gen.gen_num(self.iptr());
                 ffi_args.push(ptr.clone());
-                instr.push(Instr::LiftRefObject(ptr, out.clone(), format!("Vec<{}>", ty)));
+                instr.push(Instr::LiftRefObject(
+                    ptr,
+                    out.clone(),
+                    format!("Vec<{}>", ty),
+                ));
             }
         }
     }
