@@ -9,6 +9,5 @@ void main() async {
     print(e.getN());
   }
 
-  list[0];
   print(api.sumList(list));
 }

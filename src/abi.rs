@@ -213,9 +213,9 @@ pub enum Abi {
 impl Abi {
     pub(crate) fn native() -> Self {
         #[cfg(target_pointer_width = "32")]
-        return Abi::Native32;
+            return Abi::Native32;
         #[cfg(target_pointer_width = "64")]
-        return Abi::Native64;
+            return Abi::Native64;
     }
 
     pub(crate) fn uptr(self) -> NumType {
@@ -397,17 +397,34 @@ impl Interface {
     }
 
     pub fn listed_types(&self) -> Vec<String> {
+        fn find_inner_listed_types<F: FnMut(String) -> ()>(ty: &AbiType, cb: &mut F) {
+            use AbiType::*;
+            match ty {
+                List(name) => cb(name.clone()),
+                Option(ty) |
+                Result(ty) |
+                Iter(ty) |
+                Future(ty) |
+                Stream(ty) |
+                RefIter(ty) |
+                RefFuture(ty) |
+                RefStream(ty) => find_inner_listed_types(ty.as_ref(), cb),
+                Tuple(tys) => tys.iter().for_each(|ty| find_inner_listed_types(ty, cb)),
+                _ => {}
+            }
+        }
+
         let mut res = HashSet::new();
+        let mut res_adder = |ty| { res.insert(ty); };
         let mut func_processor = |f: AbiFunction| {
-            if let Some(AbiType::List(ty)) = f.ret {
-                res.insert(ty);
+            if let Some(ty) = &f.ret {
+                find_inner_listed_types(ty, &mut res_adder);
             }
             for (_, ty) in f.args.iter() {
-                if let AbiType::List(ty) = ty {
-                    res.insert(ty.to_string());
-                }
+                find_inner_listed_types(ty, &mut res_adder);
             }
         };
+
         for func in self.functions() {
             func_processor(func);
         }
@@ -416,6 +433,7 @@ impl Interface {
                 func_processor(func);
             }
         }
+
         res.into_iter().collect()
     }
 

@@ -145,18 +145,7 @@ impl Abi {
             AbiType::List(ty) => {
                 let ptr = gen.gen_num(self.iptr());
                 ffi_args.push(ptr.clone());
-                let wrapper = gen.gen_num(self.iptr());
-
-                instr.push(Instr::LiftObject(
-                    ptr,
-                    wrapper.clone(),
-                    format!("FfiList{}", ty),
-                ));
-                instr.push(Instr::MoveProperty(
-                    wrapper,
-                    out.clone(),
-                    "data".to_string(),
-                ));
+                instr.push(Instr::LiftRefObject(ptr, out.clone(), format!("Vec<{}>", ty)));
             }
         }
     }
@@ -308,15 +297,10 @@ impl Abi {
                 instr.push(Instr::LowerObject(ret, ptr));
             }
             AbiType::List(ty) => {
-                let ffi_list = gen.gen_num(self.iptr());
+                instr.push(Instr::AssertType(ret.clone(), format!("Vec<{}>", ty)));
                 let ptr = gen.gen_num(self.iptr());
                 ffi_rets.push(ptr.clone());
-                instr.push(Instr::CallFunction(
-                    format!("FfiList{}::new", ty),
-                    ret,
-                    ffi_list.clone(),
-                ));
-                instr.push(Instr::LowerObject(ffi_list, ptr));
+                instr.push(Instr::LowerObject(ret, ptr));
             }
         }
     }
@@ -431,6 +415,5 @@ pub enum Instr {
     LowerTuple(Var, Vec<Var>),
     CallAbi(FunctionType, Option<Var>, String, Option<Var>, Vec<Var>),
     DefineRets(Vec<Var>),
-    CallFunction(String, Var, Var),
-    MoveProperty(Var, Var, String),
+    AssertType(Var, String),
 }

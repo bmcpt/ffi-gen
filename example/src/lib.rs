@@ -75,7 +75,7 @@ extern "C" {
 
 fn log(msg: &str) {
     #[cfg(target_family = "wasm")]
-    return unsafe { __console_log(msg.as_ptr() as _, msg.len()) };
+        return unsafe { __console_log(msg.as_ptr() as _, msg.len()) };
     #[cfg(not(target_family = "wasm"))]
     println!("{}", msg);
 }
@@ -110,9 +110,9 @@ fn create_list() -> Vec<CustomType> {
     ]
 }
 
-fn sum_list(l: Vec<CustomType>) -> u32 {
-    l.into_iter()
-        .reduce(|a, b| CustomType { n: a.n + b.n })
-        .unwrap()
-        .n as _
+fn sum_list(l: &[CustomType]) -> u32 {
+    l.iter()
+        .map(|e| e.n)
+        .fold(0, |a, b| a + b)
+        as _
 }

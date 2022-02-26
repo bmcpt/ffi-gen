@@ -34,6 +34,7 @@ impl RustGenerator {
             use core::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
             use std::sync::Arc;
             use std::ffi::c_void;
+            use futures::FutureExt;
             use super::*;
 
             /// Try to execute some function, catching any panics and aborting to make sure Rust
@@ -264,7 +265,6 @@ impl RustGenerator {
             #(for iter in iface.iterators() => #(self.generate_iterator(&iter)))
             #(for fut in iface.futures() => #(self.generate_future(&fut)))
             #(for stream in iface.streams() => #(self.generate_stream(&stream)))
-            #(for ty in iface.listed_types() => #(self.generate_list_type(ty.as_str())))
             #(for ty in iface.listed_types() => #(self.generate_list_type_methods(ty.as_str())))
         }
         }
@@ -277,7 +277,7 @@ impl RustGenerator {
             #[no_mangle]
             pub extern "C" fn #(format!("__{}Create", name))() -> usize {
                 panic_abort(move || unsafe {
-                    let list = Box::new(#name::new(vec![]));
+                    let list = Box::new(Vec::<#ty>::new());
                     Box::into_raw(list) as _
                 })
             }
@@ -285,15 +285,15 @@ impl RustGenerator {
             #[no_mangle]
             pub extern "C" fn #(format!("drop_box_{}", name))(_: i64, boxed: i64) {
                 panic_abort(move || unsafe {
-                    Box::<#name>::from_raw(boxed as _);
+                    Box::<Vec<#ty>>::from_raw(boxed as _);
                 })
             }
 
             #[no_mangle]
             pub extern "C" fn #(format!("__{}Len", name))(boxed: usize) -> u32 {
                 panic_abort(move || unsafe {
-                    let list = Box::<#(name)>::from_raw(boxed as _);
-                    let result = list.len();
+                    let list = Box::<Vec<#ty>>::from_raw(boxed as _);
+                    let result = list.len() as u32;
                     Box::into_raw(list);
                     result as _
                 })
@@ -302,35 +302,11 @@ impl RustGenerator {
             #[no_mangle]
             pub extern "C" fn #(format!("__{}ElementAt", name))(boxed: usize, index: u32) -> usize {
                 panic_abort(move || unsafe {
-                    let list = Box::<#(name)>::from_raw(boxed as _);
-                    let result = list.element_at(index).unwrap() as *const _;
+                    let list = Box::<Vec<#ty>>::from_raw(boxed as _);
+                    let result = list.get(index as usize).unwrap() as *const _;
                     Box::into_raw(list);
                     result as _
                 })
-            }
-        )
-    }
-
-    fn generate_list_type(&self, ty: &str) -> rust::Tokens {
-        let name_s = format!("FfiList{}", ty);
-        let name = name_s.as_str();
-        quote!(
-            pub struct #(name) {
-                data: Vec<#(ty)>,
-            }
-
-            impl #(name) {
-                fn new(data: Vec<#(ty)>) -> Self {
-                    Self { data }
-                }
-
-                fn len(&self) -> u32 {
-                    self.data.len() as _
-                }
-
-                fn element_at(&self, idx: u32) -> Option<&#ty> {
-                    self.data.get(idx as usize)
-                }
             }
         )
     }
@@ -634,11 +610,8 @@ impl RustGenerator {
             Instr::DefineRets(vars) => quote! {
                 #(for var in vars => #[allow(unused_assignments)] let mut #(self.var(var)) = Default::default();)
             },
-            Instr::CallFunction(name, in_, out_) => {
-                quote!(let #(self.var(out_)) = #(name)(#(self.var(in_)));)
-            }
-            Instr::MoveProperty(in_, out_, name) => {
-                quote!(let #(self.var(out_)) = #(self.var(in_)).#name;)
+            Instr::AssertType(var, ty) => {
+                quote!(let #(self.var(var))_type_test: &#ty = &#(self.var(var));)
             }
         }
     }
@@ -669,7 +642,7 @@ impl RustGenerator {
             AbiType::RefStream(ty) => quote!(&impl Stream<Item = #(self.ty(ty))>),
             AbiType::Stream(ty) => quote!(impl Stream<Item = #(self.ty(ty))>),
             AbiType::Buffer(ty) => quote!(FfiBuffer<#(self.num_type(*ty))>),
-            AbiType::List(ty) => quote!(#(format!("FfiList{}", ty))),
+            AbiType::List(ty) => quote!(#(format!("Vec<{}>", ty))),
         }
     }
 
