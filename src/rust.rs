@@ -34,7 +34,6 @@ impl RustGenerator {
             use core::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
             use std::sync::Arc;
             use std::ffi::c_void;
-            use futures::FutureExt;
             use super::*;
 
             /// Try to execute some function, catching any panics and aborting to make sure Rust
