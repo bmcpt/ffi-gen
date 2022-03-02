@@ -110,9 +110,6 @@ fn create_list() -> Vec<CustomType> {
     ]
 }
 
-fn sum_list(l: Vec<CustomType>) -> u32 {
-    l.into_iter()
-        .reduce(|a, b| CustomType { n: a.n + b.n })
-        .unwrap()
-        .n as _
+fn sum_list(l: &[CustomType]) -> u32 {
+    l.iter().map(|e| e.n).sum::<i32>() as _
 }
