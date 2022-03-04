@@ -60,7 +60,7 @@ impl FfiGen {
         let dart = DartGenerator::new(library.to_string(), cdylib.to_string());
         let dart = dart.generate(self.iface.clone()).to_file_string()?;
         std::fs::write(path.as_ref(), &dart)?;
-        let status = Command::new("dart")
+        let status = Command::new(if cfg!(windows) { "dart.bat" } else { "dart" })
             .arg("format")
             .arg(path.as_ref())
             .status()
