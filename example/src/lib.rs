@@ -26,11 +26,7 @@ struct DataTest {
 }
 
 fn create(n: usize) -> DataTest {
-    let mut bytes = Vec::with_capacity(n);
-    for _ in 0..n {
-        bytes.push(42);
-    }
-    DataTest { bytes }
+    DataTest { bytes: vec![42; n] }
 }
 
 impl DataTest {
@@ -44,12 +40,12 @@ impl DataTest {
 }
 
 macro_rules! gen_counting_func {
-            ($ty:ident) => {
-                pub fn $ty(n: usize) -> api::FfiBuffer<$ty> {
-                    api::FfiBuffer::new((0..n).map(|n| n as $ty).collect())
-                }
-            };
+    ($ty:ident) => {
+        pub fn $ty(n: usize) -> api::FfiBuffer<$ty> {
+            api::FfiBuffer::new((0..n).map(|n| n as $ty).collect())
         }
+    };
+}
 
 gen_counting_func!(u8);
 gen_counting_func!(u16);
@@ -113,9 +109,8 @@ fn s() -> String {
 }
 
 fn ss() -> Vec<String> {
-    vec![
-        "first",
-        "second",
-        "third",
-    ].iter().map(|s| s.to_string()).collect()
+    vec!["first", "second", "third"]
+        .iter()
+        .map(|s| s.to_string())
+        .collect()
 }

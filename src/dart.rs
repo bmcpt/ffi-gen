@@ -925,7 +925,13 @@ pub mod test_runner {
         let rust_gen = RustGenerator::new(Abi::native());
         let rust_tokens = rust_gen.generate(iface.clone());
         let (mut dart_file, dart_file_path) = NamedTempFile::new()?.keep()?;
-        dart_file.write_all(format!("// native lib: {}\n", rust_file_path.as_path().to_str().unwrap()).as_bytes())?;
+        dart_file.write_all(
+            format!(
+                "// native lib: {}\n",
+                rust_file_path.as_path().to_str().unwrap()
+            )
+            .as_bytes(),
+        )?;
         let dart_gen = DartGenerator::new("compile_pass".to_string(), "compile_pass".to_string());
         let dart_tokens = dart_gen.generate(iface);
 
@@ -957,13 +963,18 @@ pub mod test_runner {
 
         let library_dir = PathBuf::from_str("/tmp").unwrap();
         let library_file = library_dir.join("libcompile_pass.so");
-        dart_file.write_all(format!("// native code: {}\n", library_file.as_path().to_str().unwrap()).as_bytes())?;
+        dart_file.write_all(
+            format!(
+                "// native code: {}\n",
+                library_file.as_path().to_str().unwrap()
+            )
+            .as_bytes(),
+        )?;
 
         let library = library_tokens.to_file_string()?;
         rust_file.write_all(library.as_bytes())?;
         let bin = bin_tokens.to_file_string()?;
         dart_file.write_all(bin.as_bytes())?;
-
 
         let runner_tokens: rust::Tokens = quote! {
             fn main() {

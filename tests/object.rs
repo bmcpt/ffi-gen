@@ -569,4 +569,3 @@ compile_pass_no_js! {
         assert(img1.equals(img2.asTypedList()));
     )
 }
-
