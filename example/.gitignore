@@ -15,3 +15,6 @@ build/
 pubspec.lock
 
 bindings.rs
+dart/api.dll
+dart/libapi.so
+dart/lib/bindings.dart

@@ -31,7 +31,7 @@ impl DartGenerator {
             import "dart:async";
             import "dart:convert";
             import "dart:ffi" as ffi;
-            import "dart:io" show Platform;
+            import "dart:io" show Platform, File, Directory;
             import "dart:isolate";
             import "dart:typed_data";
 
@@ -227,6 +227,39 @@ impl DartGenerator {
                 return controller.stream;
             }
 
+            class FfiString {
+              final Api _api;
+              final _Box _box;
+
+              FfiString._(this._api, this._box);
+
+              String toDartString() {
+                final parts = _api._ffiStringIntoParts(_box.borrow());
+                final ffi.Pointer<ffi.Uint8> tmp2_0 = ffi.Pointer.fromAddress(parts.addr);
+                final tmp1 = utf8.decode(tmp2_0.asTypedList(parts.len));
+                if (parts.capacity > 0) {
+                  final ffi.Pointer<ffi.Void> tmp2_0;
+                  tmp2_0 = ffi.Pointer.fromAddress(parts.addr);
+                  _api.__deallocate(tmp2_0, parts.capacity * 1, 1);
+                }
+                return tmp1;
+              }
+
+              #(static_literal("///")) Manually drops the object and unregisters the FinalizableHandle.
+              void drop() {
+                _box.drop();
+              }
+            }
+
+            class _FfiStringParts extends ffi.Struct {
+              @ffi.Int64()
+              external int addr;
+              @ffi.Uint64()
+              external int len;
+              @ffi.Uint64()
+              external int capacity;
+            }
+
             #(static_literal("///")) Main entry point to library.
             class Api {
                 #(static_literal("///")) Holds the symbol lookup function.
@@ -317,17 +350,22 @@ impl DartGenerator {
 
                 late final _ffiBufferAddressPtr = _lookup<
                     ffi.NativeFunction<
-                        ffi.Pointer<ffi.Uint8> Function(ffi.IntPtr)>>("__ffi_buffer_address");
+                        ffi.IntPtr Function(ffi.IntPtr)>>("__ffi_buffer_address");
 
                 late final _ffiBufferAddress = _ffiBufferAddressPtr.asFunction<
-                    ffi.Pointer<ffi.Uint8> Function(int)>();
+                    int Function(int)>();
 
                 late final _ffiBufferSizePtr = _lookup<
                     ffi.NativeFunction<
-                        ffi.Uint32 Function(ffi.IntPtr)>>("__ffi_buffer_size");
+                        ffi.Uint64 Function(ffi.IntPtr)>>("__ffi_buffer_size");
 
                 late final _ffiBufferSize = _ffiBufferSizePtr.asFunction<
                     int Function(int)>();
+
+                late final _ffiStringIntoPartsPtr =
+                _lookup<ffi.NativeFunction<_FfiStringParts Function(ffi.IntPtr)>>("__ffi_string_into_parts");
+
+                late final _ffiStringIntoParts = _ffiStringIntoPartsPtr.asFunction<_FfiStringParts Function(int)>();
 
                 #(for iter in iface.iterators() => #(self.generate_function(&iter.next())))
                 #(for fut in iface.futures() => #(self.generate_function(&fut.poll())))
@@ -493,7 +531,6 @@ impl DartGenerator {
             _ => ty,
         };
         let class_name = format!("FfiBuffer{}", ty);
-        let method_name = format!("to{}List", ty);
         quote! {
             class #(&class_name) {
                 final Api _api;
@@ -505,9 +542,11 @@ impl DartGenerator {
                     _box.drop();
                 }
 
-                #(ty)List #(method_name)() {
+                #(static_literal("///")) Returns a typed view of this buffer.
+                #(static_literal("///")) Note: The lifetime of this view is tied to the lifetime of this #(class_name.to_string()). This #(ty)List must not live longer than the creating #(class_name.to_string())
+                #(ty)List asTypedList() {
                     final buffer = _box.borrow();
-                    final addressRaw = _api._ffiBufferAddress(buffer).address;
+                    final addressRaw = _api._ffiBufferAddress(buffer);
                     final size = _api._ffiBufferSize(buffer) ~/ #(bytes);
                     return ffi.Pointer<ffi.#(pointer_name)>.fromAddress(addressRaw).asTypedList(size);
                 }
@@ -874,16 +913,19 @@ pub mod test_runner {
     use crate::{Abi, RustGenerator};
     use anyhow::Result;
     use std::io::Write;
+    use std::path::PathBuf;
+    use std::str::FromStr;
     use tempfile::NamedTempFile;
     use trybuild::TestCases;
 
     pub fn compile_pass(iface: &str, rust: rust::Tokens, dart: dart::Tokens) -> Result<()> {
         let iface = Interface::parse(iface)?;
-        let mut rust_file = NamedTempFile::new()?;
+        let (mut rust_file, rust_file_path) = NamedTempFile::new()?.keep()?;
         writeln!(rust_file, "#![feature(vec_into_raw_parts)]")?;
         let rust_gen = RustGenerator::new(Abi::native());
         let rust_tokens = rust_gen.generate(iface.clone());
-        let mut dart_file = NamedTempFile::new()?;
+        let (mut dart_file, dart_file_path) = NamedTempFile::new()?.keep()?;
+        dart_file.write_all(format!("// native lib: {}\n", rust_file_path.as_path().to_str().unwrap()).as_bytes())?;
         let dart_gen = DartGenerator::new("compile_pass".to_string(), "compile_pass".to_string());
         let dart_tokens = dart_gen.generate(iface);
 
@@ -913,13 +955,16 @@ pub mod test_runner {
             }
         };
 
+        let library_dir = PathBuf::from_str("/tmp").unwrap();
+        let library_file = library_dir.join("libcompile_pass.so");
+        dart_file.write_all(format!("// native code: {}\n", library_file.as_path().to_str().unwrap()).as_bytes())?;
+
         let library = library_tokens.to_file_string()?;
         rust_file.write_all(library.as_bytes())?;
         let bin = bin_tokens.to_file_string()?;
         dart_file.write_all(bin.as_bytes())?;
 
-        let library_dir = tempfile::tempdir()?;
-        let library_file = library_dir.as_ref().join("libcompile_pass.so");
+
         let runner_tokens: rust::Tokens = quote! {
             fn main() {
                 use std::process::Command;
@@ -934,31 +979,30 @@ pub mod test_runner {
                     .arg("feature=\"test_runner\"")
                     .arg("-o")
                     .arg(#(quoted(library_file.as_path().to_str().unwrap())))
-                    .arg(#(quoted(rust_file.as_ref().to_str().unwrap())))
+                    .arg(#(quoted(rust_file_path.as_path().to_str().unwrap())))
                     .status()
                     .unwrap()
                     .success();
                 assert!(ret);
                 // println!("{}", #_(#bin));
                 let ret = Command::new("dart")
-                    .env("LD_LIBRARY_PATH", #(quoted(library_dir.as_ref().to_str().unwrap())))
+                    .env("LD_LIBRARY_PATH", #(quoted(library_dir.as_path().to_str().unwrap())))
                     .arg("--enable-asserts")
                     //.arg("--observe")
                     //.arg("--write-service-info=service.json")
-                    .arg(#(quoted(dart_file.as_ref().to_str().unwrap())))
+                    .arg(#(quoted(dart_file_path.as_path().to_str().unwrap())))
                     .status()
                     .unwrap()
                     .success();
                 assert!(ret);
             }
         };
-
-        let mut runner_file = NamedTempFile::new()?;
+        let (mut runner_file, runner_file_path) = NamedTempFile::new()?.keep()?;
         let runner = runner_tokens.to_file_string()?;
         runner_file.write_all(runner.as_bytes())?;
 
         let test = TestCases::new();
-        test.pass(runner_file.as_ref());
+        test.pass(runner_file_path.as_path().to_str().unwrap());
         Ok(())
     }
 }

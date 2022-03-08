@@ -1,4 +1,4 @@
-use ffi_gen::compile_pass;
+use ffi_gen::{compile_pass, compile_pass_no_js};
 
 compile_pass! {
     object,
@@ -428,3 +428,145 @@ compile_pass! {
         futureIterator(): Promise<Iterable<string>>;
     })
 }
+
+compile_pass_no_js! {
+    typed_buffers,
+    "
+        fn u8(n: usize) -> buffer<u8>;
+        fn u16(n: usize) -> buffer<u16>;
+        fn u32(n: usize) -> buffer<u32>;
+        fn u64(n: usize) -> buffer<u64>;
+        fn i8(n: usize) -> buffer<i8>;
+        fn i16(n: usize) -> buffer<i16>;
+        fn i32(n: usize) -> buffer<i32>;
+        fn i64(n: usize) -> buffer<i64>;
+        fn f32(n: usize) -> buffer<f32>;
+        fn f64(n: usize) -> buffer<f64>;
+    ",
+    (
+        macro_rules! gen_counting_func {
+            ($ty:ident) => {
+                pub fn $ty(n: usize) -> api::FfiBuffer<$ty> {
+                    api::FfiBuffer::new((0..n).map(|n| n as $ty).collect())
+                }
+            };
+        }
+
+        gen_counting_func!(u8);
+        gen_counting_func!(u16);
+        gen_counting_func!(u32);
+        gen_counting_func!(u64);
+        gen_counting_func!(i8);
+        gen_counting_func!(i16);
+        gen_counting_func!(i32);
+        gen_counting_func!(i64);
+        gen_counting_func!(f32);
+        gen_counting_func!(f64);
+    ),
+    (
+        use std::ffi::c_void;
+        unsafe {
+            type el = u16;
+            let ptr = __u16(20) as *mut c_void;
+            let addr = __ffi_buffer_address(ptr);
+            let size = __ffi_buffer_size(ptr);
+            let buf = std::slice::from_raw_parts(addr as *mut el, size as usize / std::mem::size_of::<el>());
+            dbg!(buf);
+        }
+    ),
+    (
+        final buffers = <dynamic>[
+            api.u8(20),
+            api.u16(20),
+            api.u32(20),
+            api.u64(20),
+            api.i8(20),
+            api.i16(20),
+            api.i32(20),
+            api.i64(20),
+            api.f32(20),
+            api.f64(20),
+        ];
+        final views = buffers.map((b) => b.asTypedList());
+        views.forEach((v) {
+            assert(v.length == 20, v.toString());
+            for (var i=0; i<20; i++) {
+                assert(v[i] == i, v.toString());
+            }
+        });
+    )
+}
+
+compile_pass_no_js! {
+    vec_string,
+    "fn ss() -> Vec<string>;",
+    (
+        pub fn ss() -> Vec<String> {
+            vec!["hello".to_string(), "world".to_string()]
+        }
+    ),
+    (),
+    (
+        final ss = api.ss().map((s) => s.toDartString()).toList();
+        assert(ss.length == 2);
+        assert(ss[0] == "hello", ss[0]);
+        assert(ss[1] == "world", ss[1]);
+    )
+}
+
+compile_pass_no_js! {
+    typed_list,
+    "object CustomObject {
+        fn to_string() -> string;
+    }
+
+    fn create_custom_objects(n: usize) -> Future<Vec<CustomObject>>;
+    ",
+    (
+        pub struct CustomObject {
+            n: usize
+        }
+
+        impl CustomObject {
+            fn new(n: usize) -> Self {
+                Self { n }
+            }
+
+            fn to_string(&self) -> String {
+                format!("CustomObject({})", self.n)
+            }
+        }
+
+        async fn create_custom_objects(n: usize) -> Vec<CustomObject> {
+            return (0..n).map(CustomObject::new).collect()
+        }
+    ),
+    (),
+    (
+        final objs = await api.createCustomObjects(40);
+        final reprs = objs.map((o) => o.toString()).toList();
+        assert(reprs[5].toString() == "CustomObject(5)", reprs);
+        assert(reprs[34].toString() == "CustomObject(34)", reprs);
+    )
+}
+
+compile_pass_no_js! {
+    read_file,
+    "
+    fn read_file(path: string) -> Future<buffer<u8>>;
+    ",
+    (
+        async fn read_file(path: String) -> api::FfiBuffer<u8> {
+            let data = std::fs::read(path.as_str()).unwrap();
+            api::FfiBuffer::new(data)
+        }
+    ),
+    (),
+    (
+        final path = "../../../example/dart/image.jpg";
+        final img1 = await new File(path).readAsBytes();
+        final img2 = await api.readFile(path);
+        assert(img1.equals(img2.asTypedList()));
+    )
+}
+
