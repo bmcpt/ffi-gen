@@ -493,6 +493,7 @@ impl Interface {
             Type::Vec(inner) => match self.to_type(inner) {
                 AbiType::Num(ty) => AbiType::Vec(ty),
                 AbiType::Object(ty) => AbiType::List(ty),
+                AbiType::String => AbiType::List("FfiString".to_string()),
                 ty => unimplemented!("Vec<{:?}>", ty),
             },
             Type::Ident(ident) => {

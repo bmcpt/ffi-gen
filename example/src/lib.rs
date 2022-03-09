@@ -21,20 +21,12 @@ fn get_image() -> api::FfiBuffer<u8> {
     api::FfiBuffer::new(bytes)
 }
 
-const RF: &str = "/dev/random";
-
 struct DataTest {
     bytes: Vec<u8>,
 }
 
 fn create(n: usize) -> DataTest {
-    let mut bytes = Vec::with_capacity(n);
-    std::fs::File::open(RF)
-        .unwrap()
-        .take(n as u64)
-        .read_to_end(&mut bytes)
-        .unwrap();
-    DataTest { bytes }
+    DataTest { bytes: vec![42; n] }
 }
 
 impl DataTest {
@@ -49,10 +41,8 @@ impl DataTest {
 
 macro_rules! gen_counting_func {
     ($ty:ident) => {
-        paste::paste! {
-            fn [< get_ $ty _counting>](n: usize) -> api::FfiBuffer<$ty> {
-                api::FfiBuffer::new((0..n).map(|n| n as $ty).collect())
-            }
+        pub fn $ty(n: usize) -> api::FfiBuffer<$ty> {
+            api::FfiBuffer::new((0..n).map(|n| n as $ty).collect())
         }
     };
 }
@@ -112,4 +102,15 @@ fn create_list() -> Vec<CustomType> {
 
 fn sum_list(l: &[CustomType]) -> u32 {
     l.iter().map(|e| e.n).sum::<i32>() as _
+}
+
+fn s() -> String {
+    "string from rust".to_string()
+}
+
+fn ss() -> Vec<String> {
+    vec!["first", "second", "third"]
+        .iter()
+        .map(|s| s.to_string())
+        .collect()
 }

@@ -36,6 +36,8 @@ impl RustGenerator {
             use std::ffi::c_void;
             use super::*;
 
+            type FfiString = String;
+
             /// Try to execute some function, catching any panics and aborting to make sure Rust
             /// doesn't unwind across the FFI boundary.
             pub fn panic_abort<R>(func: impl FnOnce() -> R + std::panic::UnwindSafe) -> R {
@@ -70,11 +72,12 @@ impl RustGenerator {
                 std::alloc::dealloc(ptr, layout);
             }
 
+            #[derive(Debug)]
             pub struct FfiBuffer<T> {
-                addr: usize,
-                size: usize,
-                alloc: usize,
-                phantom: std::marker::PhantomData<T>
+                pub addr: usize,
+                pub size: usize,
+                pub alloc: usize,
+                pub phantom: std::marker::PhantomData<T>
             }
 
             impl<T> FfiBuffer<T> {
@@ -106,9 +109,27 @@ impl RustGenerator {
             }
 
             #[no_mangle]
-            pub unsafe extern "C" fn __ffi_buffer_size(ptr: *mut c_void) -> u32 {
+            pub unsafe extern "C" fn __ffi_buffer_size(ptr: *mut c_void) -> u64 {
                 let buffer = &*(ptr as *mut FfiBuffer<u8>);
                 buffer.size as _
+            }
+
+            #[repr(C)]
+            pub struct _FfiStringParts {
+                ptr: i64,
+                len: u64,
+                capacity: u64,
+            }
+
+            #[no_mangle]
+            pub unsafe extern "C" fn __ffi_string_into_parts(ptr: *mut c_void) -> _FfiStringParts {
+                let s = &*(ptr as *mut FfiString);
+                let obj = ManuallyDrop::new(s);
+                _FfiStringParts {
+                    ptr: obj.as_ptr() as _,
+                    len: obj.len() as _,
+                    capacity: obj.capacity() as _,
+                }
             }
 
             #[no_mangle]

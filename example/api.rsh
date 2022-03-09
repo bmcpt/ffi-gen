@@ -10,16 +10,16 @@ object DataTest {
     fn get_shmem() -> buffer<u8>;
 }
 
-fn get_u8_counting(n: usize) -> buffer<u8>;
-fn get_u16_counting(n: usize) -> buffer<u16>;
-fn get_u32_counting(n: usize) -> buffer<u32>;
-fn get_u64_counting(n: usize) -> buffer<u64>;
-fn get_i8_counting(n: usize) -> buffer<i8>;
-fn get_i16_counting(n: usize) -> buffer<i16>;
-fn get_i32_counting(n: usize) -> buffer<i32>;
-fn get_i64_counting(n: usize) -> buffer<i64>;
-fn get_f32_counting(n: usize) -> buffer<f32>;
-fn get_f64_counting(n: usize) -> buffer<f64>;
+fn u8(n: usize) -> buffer<u8>;
+fn u16(n: usize) -> buffer<u16>;
+fn u32(n: usize) -> buffer<u32>;
+fn u64(n: usize) -> buffer<u64>;
+fn i8(n: usize) -> buffer<i8>;
+fn i16(n: usize) -> buffer<i16>;
+fn i32(n: usize) -> buffer<i32>;
+fn i64(n: usize) -> buffer<i64>;
+fn f32(n: usize) -> buffer<f32>;
+fn f64(n: usize) -> buffer<f64>;
 
 fn create_list() -> Vec<CustomType>;
 
@@ -28,3 +28,7 @@ fn sum_list(l: Vec<CustomType>) -> u32;
 object CustomType {
     fn get_n() -> i32;
 }
+
+fn s() -> string;
+
+fn ss() -> Vec<string>;

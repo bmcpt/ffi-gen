@@ -138,4 +138,21 @@ pub mod test_runner {
             }
         }
     }
+
+    #[macro_export]
+    macro_rules! compile_pass_no_js {
+        ($ident:ident, $iface:expr, ($($api:tt)*), ($($rust:tt)*), ($($dart:tt)*)) => {
+            mod $ident {
+                #[test]
+                fn rust() {
+                    $crate::test_runner::compile_pass_rust($iface, genco::quote!($($api)*), genco::quote!($($rust)*)).unwrap();
+                }
+
+                #[test]
+                fn dart() {
+                    $crate::test_runner::compile_pass_dart($iface, genco::quote!($($api)*), genco::quote!($($dart)*)).unwrap();
+                }
+            }
+        }
+    }
 }

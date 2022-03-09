@@ -9,7 +9,7 @@ void main() async {
   print(data.getCopy().length);
   final t2 = DateTime.now();
   print(t2.difference(t1).inMilliseconds);
-  print(data.getShmem().toUint8List().length);
+  print(data.getShmem().asTypedList().length);
   final t3 = DateTime.now();
   print(t3.difference(t2).inMilliseconds);
 }
