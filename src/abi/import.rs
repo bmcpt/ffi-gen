@@ -22,6 +22,7 @@ impl Abi {
         #[allow(clippy::ptr_arg)] instr_cleanup: &mut Vec<Instr>,
     ) {
         match &arg.ty {
+            AbiType::RefEnum(_) => todo!(),
             AbiType::Num(num)
                 if matches!((self, num), (Abi::Wasm32, NumType::U64 | NumType::I64)) =>
             {
@@ -327,6 +328,12 @@ impl Abi {
                     ffi_buf.clone(),
                 ));
                 instr.push(Instr::LiftNum(ffi_buf, out, self.iptr()));
+            }
+            AbiType::RefEnum(obj) => {
+                let ptr = gen.gen_num(self.iptr());
+                ffi_rets.push(ptr.clone());
+                let destructor = format!("drop_box_{}", obj);
+                instr.push(Instr::LiftObject(obj.clone(), ptr, destructor, out));
             }
         }
     }

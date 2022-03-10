@@ -13,6 +13,7 @@ pub struct Interface {
     pub doc: Vec<String>,
     pub functions: Vec<Function>,
     pub objects: Vec<Object>,
+    pub enums: Vec<Enum>,
     idents: HashSet<String>,
 }
 
@@ -21,6 +22,7 @@ impl Interface {
         let pairs = GrammarParser::parse(Rule::root, input)?;
         let mut doc = vec![];
         let mut functions = vec![];
+        let mut enums = vec![];
         let mut objects = vec![];
         let mut idents = HashSet::new();
         for pair in pairs {
@@ -41,6 +43,10 @@ impl Interface {
                         let fun = Function::parse(pair)?;
                         functions.push(fun);
                     }
+                    Rule::enum_ => {
+                        let e = Enum::parse(pair)?;
+                        enums.push(e);
+                    }
                     _ => {}
                 }
             }
@@ -50,11 +56,19 @@ impl Interface {
             functions,
             objects,
             idents,
+            enums,
         })
     }
 
     pub fn is_object(&self, name: &str) -> bool {
         self.idents.contains(name)
+    }
+
+    pub fn is_enum(&self, name: &str) -> bool {
+        self.enums
+            .iter()
+            .map(|e| e.ident.as_str())
+            .any(|n| n == name)
     }
 }
 
@@ -152,6 +166,82 @@ impl Function {
             ident: ident.unwrap(),
             args,
             ret,
+        })
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct EnumEntry {
+    pub name: String,
+    pub inner: Option<Type>,
+}
+
+impl EnumEntry {
+    pub fn parse(pair: Pair<Rule>) -> Result<Self> {
+        let mut name = None;
+        let mut inner = None;
+        for pair in pair.into_inner() {
+            match pair.as_rule() {
+                Rule::ident => {
+                    name = Some(pair.as_str().to_string());
+                }
+                Rule::enum_inner => {
+                    for pair in pair.into_inner() {
+                        #[allow(clippy::single_match)]
+                        match pair.as_rule() {
+                            Rule::type_ => {
+                                let wrapped = Type::parse(pair)?;
+                                if let Type::Ident(_) = &wrapped {
+                                    inner = Some(wrapped);
+                                } else {
+                                    unimplemented!("Enums can only wrap objects")
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        Ok(Self {
+            name: name.unwrap(),
+            inner,
+        })
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Enum {
+    pub doc: Vec<String>,
+    pub ident: String,
+    pub entries: Vec<EnumEntry>,
+}
+
+impl Enum {
+    pub fn parse(pair: Pair<Rule>) -> Result<Self> {
+        let mut doc = vec![];
+        let mut ident = None;
+        let mut entries = vec![];
+        for pair in pair.into_inner() {
+            match pair.as_rule() {
+                Rule::item_docs => {
+                    doc.push(pair.as_str()[3..].trim().to_string());
+                }
+                Rule::ident => {
+                    ident = Some(pair.as_str().to_string());
+                }
+                Rule::enum_entry => {
+                    let entry = EnumEntry::parse(pair)?;
+                    entries.push(entry);
+                }
+                _ => {}
+            }
+        }
+        Ok(Self {
+            doc,
+            ident: ident.unwrap(),
+            entries,
         })
     }
 }
@@ -280,6 +370,7 @@ mod tests {
             res,
             Interface {
                 doc: Default::default(),
+                enums: vec![],
                 objects: vec![],
                 functions: vec![],
                 idents: Default::default(),
@@ -290,6 +381,7 @@ mod tests {
             res,
             Interface {
                 doc: Default::default(),
+                enums: vec![],
                 objects: vec![],
                 functions: vec![Function {
                     doc: Default::default(),
@@ -306,6 +398,7 @@ mod tests {
             res,
             Interface {
                 doc: Default::default(),
+                enums: vec![],
                 objects: vec![],
                 functions: vec![Function {
                     doc: Default::default(),
@@ -322,6 +415,7 @@ mod tests {
             res,
             Interface {
                 doc: Default::default(),
+                enums: vec![],
                 objects: vec![],
                 functions: vec![Function {
                     doc: Default::default(),
@@ -338,6 +432,7 @@ mod tests {
             res,
             Interface {
                 doc: Default::default(),
+                enums: vec![],
                 objects: vec![],
                 functions: vec![Function {
                     doc: Default::default(),
@@ -354,6 +449,7 @@ mod tests {
             res,
             Interface {
                 doc: Default::default(),
+                enums: vec![],
                 objects: vec![],
                 functions: vec![Function {
                     doc: Default::default(),
@@ -373,6 +469,7 @@ mod tests {
             res,
             Interface {
                 doc: Default::default(),
+                enums: vec![],
                 objects: vec![],
                 functions: vec![Function {
                     doc: Default::default(),
@@ -408,26 +505,27 @@ mod tests {
                     "read our beautiful docs".to_string(),
                     "here".to_string(),
                 ],
+                enums: vec![],
                 functions: vec![],
                 objects: vec![Object {
-                    doc: vec!["The main entry point of this example.".to_string(),],
+                    doc: vec!["The main entry point of this example.".to_string()],
                     ident: "Greeter".to_string(),
                     methods: vec![
                         Function {
-                            doc: vec!["Creates a new greeter.".to_string(),],
+                            doc: vec!["Creates a new greeter.".to_string()],
                             is_static: true,
                             ident: "new".to_string(),
                             args: vec![],
                             ret: Some(Type::Ident("Greeter".to_string())),
                         },
                         Function {
-                            doc: vec!["Returns a friendly greeting.".to_string(),],
+                            doc: vec!["Returns a friendly greeting.".to_string()],
                             is_static: false,
                             ident: "greet".to_string(),
                             args: vec![],
                             ret: Some(Type::String),
-                        }
-                    ]
+                        },
+                    ],
                 }],
                 idents: vec!["Greeter".to_string()].into_iter().collect(),
             }
@@ -444,6 +542,7 @@ mod tests {
             res,
             Interface {
                 doc: Default::default(),
+                enums: vec![],
                 functions: vec![
                     Function {
                         doc: Default::default(),
@@ -472,7 +571,7 @@ mod tests {
                         ident: "tuple3".to_string(),
                         args: vec![],
                         ret: Some(Type::Tuple(vec![Type::U8, Type::U8, Type::U8])),
-                    }
+                    },
                 ],
                 objects: Default::default(),
                 idents: Default::default(),

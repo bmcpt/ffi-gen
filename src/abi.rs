@@ -41,6 +41,7 @@ pub enum AbiType {
     Tuple(Vec<AbiType>),
     Buffer(NumType),
     List(String),
+    RefEnum(String),
 }
 
 impl AbiType {
@@ -481,10 +482,13 @@ impl Interface {
                     ty => unimplemented!("&{:?}", ty),
                 },
                 Type::Ident(ident) => {
-                    if !self.is_object(ident) {
-                        panic!("unknown identifier {}", ident);
+                    if self.is_object(ident) {
+                        AbiType::RefObject(ident.clone())
+                    } else if self.is_enum(ident) {
+                        AbiType::RefEnum(ident.clone())
+                    } else {
+                        panic!("unknown identifier {}", ident)
                     }
-                    AbiType::RefObject(ident.clone())
                 }
                 ty => unimplemented!("&{:?}", ty),
             },
@@ -493,14 +497,18 @@ impl Interface {
             Type::Vec(inner) => match self.to_type(inner) {
                 AbiType::Num(ty) => AbiType::Vec(ty),
                 AbiType::Object(ty) => AbiType::List(ty),
+                AbiType::RefEnum(ty) => AbiType::List(ty),
                 AbiType::String => AbiType::List("FfiString".to_string()),
                 ty => unimplemented!("Vec<{:?}>", ty),
             },
             Type::Ident(ident) => {
-                if !self.is_object(ident) {
-                    panic!("unknown identifier {}", ident);
+                if self.is_object(ident) {
+                    AbiType::Object(ident.clone())
+                } else if self.is_enum(ident) {
+                    AbiType::RefEnum(ident.clone())
+                } else {
+                    panic!("unknown identifier {}", ident)
                 }
-                AbiType::Object(ident.clone())
             }
             Type::Option(ty) => {
                 let inner = self.to_type(ty);

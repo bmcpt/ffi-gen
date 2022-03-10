@@ -1,4 +1,5 @@
 use crate::import::{Import, Instr};
+use crate::parser::{Enum, Type};
 use crate::{Abi, AbiFunction, AbiObject, AbiType, FunctionType, Interface, NumType, Return, Var};
 use genco::prelude::*;
 use genco::tokens::static_literal;
@@ -260,6 +261,13 @@ impl DartGenerator {
               external int capacity;
             }
 
+            class _EnumWrapper extends ffi.Struct {
+                @ffi.Uint32()
+                external int tag;
+                @ffi.IntPtr()
+                external int inner;
+            }
+
             #(static_literal("///")) Main entry point to library.
             class Api {
                 #(static_literal("///")) Holds the symbol lookup function.
@@ -373,14 +381,81 @@ impl DartGenerator {
 
                 #(for func in iface.imports(&self.abi) => #(self.generate_wrapper(func)))
                 #(for ty in iface.listed_types() => #(self.generate_list_methods(ty.as_str())))
+                #(for e in iface.enums.iter() => #(self.generate_enum_helpers(e)))
             }
 
             #(for obj in iface.objects() => #(self.generate_object(obj)))
+
+            #(for e in iface.enums.iter() => #(self.generate_enum(e)))
 
             #(for func in iface.imports(&self.abi) => #(self.generate_return_struct(&func.ffi_ret)))
 
             #(for ty in iface.listed_types() => #(self.generate_list_type(ty.as_str())))
         }
+    }
+
+    fn generate_enum_helpers(&self, e: &Enum) -> dart::Tokens {
+        let ptr_name = format!("_destructure{}Ptr", e.ident);
+        let func_name = format!("_destructure{}", e.ident);
+        let symbol_name = format!("destructure_enum_{}", e.ident);
+        quote!(
+            late final #(&ptr_name) = _lookup<
+                ffi.NativeFunction<
+                    _EnumWrapper Function(ffi.IntPtr)>>(#_(#symbol_name));
+
+            late final #(&func_name) = #(&ptr_name).asFunction<
+                _EnumWrapper Function(int)>();
+
+        )
+    }
+
+    fn generate_enum(&self, e: &Enum) -> dart::Tokens {
+        let enum_tag_name = format!("{}Tag", e.ident);
+        let destructure_function_name = format!("_destructure{}", e.ident);
+        let mut destructure_switch_index = -1;
+        quote!(
+            enum #(&enum_tag_name) {
+                #(for entry in e.entries.iter() => #(&entry.name),#<push>)
+            }
+
+            class #(&e.ident) {
+                final Api _api;
+                final _Box _box;
+
+                #(&enum_tag_name)? _tag;
+                Object? _inner;
+
+                Object? get inner => _inner;
+                #(&enum_tag_name) get tag {
+                    if (_tag == null) {
+                        final parts = this._api.#(&destructure_function_name)(this._box.borrow());
+                        switch (parts.tag) {
+                            #(for entry in e.entries.iter() => case #({ destructure_switch_index += 1; destructure_switch_index }):#<push>
+                                this._tag = #(&enum_tag_name).#(&entry.name);#<push>
+                                // this._box.move();
+                                #(if entry.inner.is_some() {
+                                    #({
+                                        let inner_name = if let Type::Ident(name) = entry.inner.as_ref().unwrap() { name } else { unimplemented!("Enums can only wrap objects") };
+                                        quote!(
+                                            final ffi.Pointer<ffi.Void> innerPtr = ffi.Pointer.fromAddress(parts.inner);
+                                            final innerBox = _Box(this._api, innerPtr, #_(#(format!("drop_box_{}", inner_name))));
+                                            innerBox._finalizer = this._api._registerFinalizer(innerBox);
+                                            this._inner = #(inner_name)._(this._api, innerBox);
+                                        )
+                                    })
+                                } else {})
+                                break;#<push>
+                            )
+                            default:#<push>
+                                throw new StateError(#(format!("\"Destructuring enum gave back an invalid tag: ${{parts.tag}}\"")));
+                        }
+                    }
+                    return this._tag!;
+                }
+
+                #(&e.ident)._(this._api, this._box);
+            }
+        )
     }
 
     fn generate_list_methods(&self, ty: &str) -> dart::Tokens {
@@ -758,6 +833,7 @@ impl DartGenerator {
             }
             AbiType::Buffer(ty) => quote!(#(ffi_buffer_name_for(*ty))),
             AbiType::List(ty) => quote!(#(format!("FfiList{}", ty))),
+            AbiType::RefEnum(ty) => quote!(#(ty)),
         }
     }
 
@@ -922,6 +998,7 @@ pub mod test_runner {
         let iface = Interface::parse(iface)?;
         let (mut rust_file, rust_file_path) = NamedTempFile::new()?.keep()?;
         writeln!(rust_file, "#![feature(vec_into_raw_parts)]")?;
+        writeln!(rust_file, "#![feature(once_cell)]")?;
         let rust_gen = RustGenerator::new(Abi::native());
         let rust_tokens = rust_gen.generate(iface.clone());
         let (mut dart_file, dart_file_path) = NamedTempFile::new()?.keep()?;

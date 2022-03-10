@@ -18,6 +18,7 @@ impl Abi {
         ffi_args: &mut Vec<Var>,
     ) {
         match &out.ty {
+            AbiType::RefEnum(_) => todo!(),
             AbiType::Num(num)
                 if matches!((self, num), (Abi::Wasm32, NumType::U64 | NumType::I64)) =>
             {
@@ -305,6 +306,11 @@ impl Abi {
                 let ptr = gen.gen_num(self.iptr());
                 ffi_rets.push(ptr.clone());
                 instr.push(Instr::LowerObject(ret, ptr));
+            }
+            AbiType::RefEnum(_ty) => {
+                let ptr = gen.gen_num(self.iptr());
+                ffi_rets.push(ptr.clone());
+                instr.push(Instr::LowerObject(ret.clone(), ptr))
             }
         }
     }

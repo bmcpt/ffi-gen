@@ -1,4 +1,8 @@
 
-object OurStruct {}
+object Vector {
+}
 
-fn create_s(x: u32, y: u32) -> Vec<OurStruct>;
+enum Shape {
+    Circle((Vector, u32)),
+    Square((Vector, Vector))
+}

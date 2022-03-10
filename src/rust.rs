@@ -1,4 +1,5 @@
 use crate::export::Instr;
+use crate::parser::Enum;
 use crate::{
     Abi, AbiFunction, AbiFuture, AbiIter, AbiObject, AbiStream, AbiType, FunctionType, Interface,
     NumType, Return, Var,
@@ -141,6 +142,12 @@ impl RustGenerator {
 
             #[no_mangle]
             pub extern "C" fn drop_box_Leak(_: i64, boxed: i64) {
+            }
+
+            #[repr(C)]
+            pub struct EnumWrapper {
+                tag: u32,
+                inner: *mut c_void,
             }
 
             #[repr(transparent)]
@@ -286,8 +293,42 @@ impl RustGenerator {
             #(for fut in iface.futures() => #(self.generate_future(&fut)))
             #(for stream in iface.streams() => #(self.generate_stream(&stream)))
             #(for ty in iface.listed_types() => #(self.generate_list_type_methods(ty.as_str())))
+            #(for e in iface.enums.iter() => #(self.generate_enum_helpers(e)))
         }
         }
+    }
+
+    fn generate_enum_helpers(&self, e: &Enum) -> rust::Tokens {
+        let destructure_function_name = format!("destructure_enum_{}", e.ident);
+        let drop_function_name = format!("drop_box_{}", e.ident);
+        let mut entry_index = -1;
+        quote!(
+            #[no_mangle]
+            pub unsafe fn #(&destructure_function_name)(ptr: *mut c_void) -> EnumWrapper {
+                let e = &*(ptr as *mut #(&e.ident)).clone();
+                let (tag, inner) = match *e {
+                    #(for sub in &e.entries => #(&e.ident)::#(&sub.name)
+                        #(if sub.inner.is_some() { (inner) }) =>
+                            (
+                                #({ entry_index += 1; entry_index }),
+                                #(if sub.inner.is_some() { Box::into_raw(Box::new(inner)) as _ } else { 0 as _ }),
+                            ),
+                    )
+                };
+                EnumWrapper {
+                    tag,
+                    inner,
+                }
+            }
+
+            #[no_mangle]
+            pub extern "C" fn #(&drop_function_name)(_: i64, boxed: i64) {
+                panic_abort(move || {
+                    unsafe { Box::<#(&e.ident)>::from_raw(boxed as *mut _) };
+                });
+            }
+
+        )
     }
 
     fn generate_list_type_methods(&self, ty: &str) -> rust::Tokens {
@@ -663,6 +704,7 @@ impl RustGenerator {
             AbiType::Stream(ty) => quote!(impl Stream<Item = #(self.ty(ty))>),
             AbiType::Buffer(ty) => quote!(FfiBuffer<#(self.num_type(*ty))>),
             AbiType::List(ty) => quote!(#(format!("Vec<{}>", ty))),
+            AbiType::RefEnum(ty) => quote!(#(format!("{}_Wrapper", ty))),
         }
     }
 
@@ -722,6 +764,7 @@ pub mod test_runner {
         let res = tokens.to_file_string()?;
         let mut tmp = NamedTempFile::new()?;
         writeln!(tmp, "#![feature(vec_into_raw_parts)]")?;
+        writeln!(tmp, "#![feature(once_cell)]")?;
         tmp.write_all(res.as_bytes())?;
         //println!("{}", res);
         let test = TestCases::new();
