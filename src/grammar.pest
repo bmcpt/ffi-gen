@@ -26,7 +26,11 @@ args = { (arg ~ ("," ~ arg)*)? }
 function = { item_docs* ~ static_? ~ "fn" ~ ident ~ "(" ~ args ~ ")" ~ ("->" ~ type_)?  ~ ";" }
 object = { item_docs* ~ "object" ~ ident ~ "{" ~ function* ~ "}" }
 
-root = { SOI ~ module_docs* ~ (object | function)* ~ EOI }
+enum_inner = { "(" ~ type_ ~ ")" }
+enum_entry = { ident ~ enum_inner? }
+enum_ = { item_docs* ~ "enum" ~ ident ~ "{" ~ enum_entry ~ ("," ~ enum_entry)* ~ "}" }
+
+root = { SOI ~ module_docs* ~ (object | function | enum_)* ~ EOI }
 
 WHITESPACE = _{ " " | "\t" | "\n" | "\r" }
 COMMENT = _{ ("/*" ~ (!"*/" ~ ANY)* ~ "*/") | ("//" ~ !("/" | "!" | "\n") ~ (!"\n" ~ ANY)* ~ "\n") }
