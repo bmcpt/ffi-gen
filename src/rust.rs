@@ -4,6 +4,7 @@ use crate::{
     NumType, Return, Var,
 };
 use genco::prelude::*;
+use crate::parser::Enum;
 
 pub struct RustGenerator {
     abi: Abi,
@@ -286,8 +287,42 @@ impl RustGenerator {
             #(for fut in iface.futures() => #(self.generate_future(&fut)))
             #(for stream in iface.streams() => #(self.generate_stream(&stream)))
             #(for ty in iface.listed_types() => #(self.generate_list_type_methods(ty.as_str())))
+            #(for e in iface.enums.iter() => #(self.generate_enum_helpers(e)))
         }
         }
+    }
+
+    fn generate_enum_helpers(&self, e: &Enum) -> rust::Tokens {
+        let destructure_function_name = format!("destructure_enum_{}", e.ident);
+        let drop_function_name = format!("drop_box_{}", e.ident);
+        let parts_struct_name = format!("{}_Wrapper", e.ident);
+        let mut entry_index = -1;
+        quote!(
+            pub struct #(&parts_struct_name) {
+                tag: u32,
+                inner: *mut c_void,
+            }
+
+            #[no_mangle]
+            pub unsafe fn #(&destructure_function_name)(ptr: *mut c_void) -> #(&parts_struct_name) {
+                let e = Box::from_raw(ptr as *mut #(&e.ident));
+                let (tag, inner) = match *e {
+                    #(for sub in &e.entries => #(&e.ident)::#(&sub.name)(inner) => (#({ entry_index += 1; entry_index }), Box::into_raw(Box::new(inner)) as _),)#<push>
+                };
+                #(&parts_struct_name) {
+                    tag,
+                    inner,
+                }
+            }
+
+            #[no_mangle]
+            pub extern "C" fn #(&drop_function_name)(_: i64, boxed: i64) {
+                panic_abort(move || {
+                    unsafe { Box::<#(&e.ident)>::from_raw(boxed as *mut _) };
+                });
+            }
+
+        )
     }
 
     fn generate_list_type_methods(&self, ty: &str) -> rust::Tokens {
@@ -632,6 +667,12 @@ impl RustGenerator {
             },
             Instr::AssertType(var, ty) => {
                 quote!(let #(self.var(var))_type_test: &#ty = &#(self.var(var));)
+            },
+            Instr::ExtractEnumTag(ty, in_, out) => {
+                quote!(let #(self.var(out)) = #(format!("enum_tag_{}", ty))(&#(self.var(in_)));)
+            }
+            Instr::LiftRefEnum => {
+                quote!()
             }
         }
     }
@@ -663,6 +704,7 @@ impl RustGenerator {
             AbiType::Stream(ty) => quote!(impl Stream<Item = #(self.ty(ty))>),
             AbiType::Buffer(ty) => quote!(FfiBuffer<#(self.num_type(*ty))>),
             AbiType::List(ty) => quote!(#(format!("Vec<{}>", ty))),
+            AbiType::RefEnum(ty) => quote!(#(format!("{}_Wrapper", ty))),
         }
     }
 

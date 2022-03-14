@@ -22,6 +22,7 @@ impl Abi {
         #[allow(clippy::ptr_arg)] instr_cleanup: &mut Vec<Instr>,
     ) {
         match &arg.ty {
+            AbiType::RefEnum(_) => todo!(),
             AbiType::Num(num)
                 if matches!((self, num), (Abi::Wasm32, NumType::U64 | NumType::I64)) =>
             {
@@ -327,6 +328,8 @@ impl Abi {
                     ffi_buf.clone(),
                 ));
                 instr.push(Instr::LiftNum(ffi_buf, out, self.iptr()));
+            }
+            AbiType::RefEnum(ty) => {
             }
         }
     }

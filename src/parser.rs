@@ -44,7 +44,8 @@ impl Interface {
                         functions.push(fun);
                     }
                     Rule::enum_ => {
-                        enums.push(Enum::parse(pair)?);
+                        let e = Enum::parse(pair)?;
+                        enums.push(e);
                     }
                     _ => {}
                 }
@@ -61,6 +62,12 @@ impl Interface {
 
     pub fn is_object(&self, name: &str) -> bool {
         self.idents.contains(name)
+    }
+
+    pub fn is_enum(&self, name: &str) -> bool {
+        self.enums.iter().map(|e| e.ident.as_str())
+            .filter(|&n| n == name)
+            .next().is_some()
     }
 }
 
@@ -162,6 +169,7 @@ impl Function {
     }
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct EnumEntry {
     pub name: String,
     pub inner: Option<Type>,
@@ -196,6 +204,7 @@ impl EnumEntry {
     }
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Enum {
     pub doc: Vec<String>,
     pub ident: String,

@@ -3,6 +3,7 @@ use crate::{Abi, AbiFunction, AbiObject, AbiType, FunctionType, Interface, NumTy
 use genco::prelude::*;
 use genco::tokens::static_literal;
 use heck::*;
+use crate::parser::{Enum, EnumEntry};
 
 pub struct DartGenerator {
     abi: Abi,
@@ -377,10 +378,50 @@ impl DartGenerator {
 
             #(for obj in iface.objects() => #(self.generate_object(obj)))
 
+            #(for e in iface.enums.iter() => #(self.generate_enum(e)))
+
             #(for func in iface.imports(&self.abi) => #(self.generate_return_struct(&func.ffi_ret)))
 
             #(for ty in iface.listed_types() => #(self.generate_list_type(ty.as_str())))
         }
+    }
+
+    fn generate_enum(&self, e: &Enum) -> dart::Tokens {
+        let enum_tag_name = format!("{}Tag", e.ident);
+        let destructure_function_name = format!("destructure_{}", e.ident);
+        let mut destructure_switch_index = -1;
+        quote!(
+            enum #(&enum_tag_name) {
+                #(for entry in e.entries.iter() => #(&entry.name),#<push>)
+            }
+
+            class #(&e.ident) {
+                final Api _api;
+                final _Box _box;
+
+                #(&enum_tag_name)? _tag;
+                Object? _inner;
+
+                Object? get inner => _inner;
+                #(&enum_tag_name) get tag {
+                    if (_tag == null) {
+                        final parts = this._api.#(&destructure_function_name)(this._box.borrow());
+                        switch (parts.tag) {
+                            #(for entry in e.entries.iter() => case #({ destructure_switch_index += 1; destructure_switch_index }):#<push>
+                                this._tag = #(&enum_tag_name).#(&entry.name);#<push>
+                                break;#<push>
+                            )
+                            default:#<push>
+                                throw new StateError(#(format!("\"Destructuring enum gave back an invalid tag: ${{parts.tag}}\"")));
+                        }
+                        this._inner = parts.inner;
+                    }
+                    return this._tag!;
+                }
+
+                #(&e.ident)(this._api, this._box);
+            }
+        )
     }
 
     fn generate_list_methods(&self, ty: &str) -> dart::Tokens {
@@ -758,6 +799,7 @@ impl DartGenerator {
             }
             AbiType::Buffer(ty) => quote!(#(ffi_buffer_name_for(*ty))),
             AbiType::List(ty) => quote!(#(format!("FfiList{}", ty))),
+            AbiType::RefEnum(ty) => quote!(#(ty)),
         }
     }
 

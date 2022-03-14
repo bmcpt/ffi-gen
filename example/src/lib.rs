@@ -114,3 +114,21 @@ fn ss() -> Vec<String> {
         .map(|s| s.to_string())
         .collect()
 }
+
+pub struct Vector {
+    x: u64,
+    y: u64,
+}
+
+pub enum Shape {
+    Circle(u64),
+    Square(Vector),
+}
+
+fn f() -> Shape {
+    Shape::Square(Vector { x: 0, y: 5 })
+}
+
+fn g() -> (u32, u64) {
+    (6, 8)
+}

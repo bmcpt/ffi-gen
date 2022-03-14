@@ -226,6 +226,7 @@ impl TsGenerator {
                 },
                 AbiType::Buffer(_) => unimplemented!("\"FfiBuffer\" type for javascript"),
                 AbiType::List(_) => unimplemented!("\"FfiList\" type for javascript"),
+                AbiType::RefEnum(_) => unimplemented!("enums type for javascript"),
             }
         } else {
             quote!(void)
