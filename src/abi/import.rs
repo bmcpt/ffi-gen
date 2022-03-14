@@ -329,7 +329,11 @@ impl Abi {
                 ));
                 instr.push(Instr::LiftNum(ffi_buf, out, self.iptr()));
             }
-            AbiType::RefEnum(ty) => {
+            AbiType::RefEnum(obj) => {
+                let ptr = gen.gen_num(self.iptr());
+                ffi_rets.push(ptr.clone());
+                let destructor = format!("drop_box_{}", obj);
+                instr.push(Instr::LiftObject(obj.clone(), ptr, destructor, out));
             }
         }
     }

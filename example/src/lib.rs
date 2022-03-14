@@ -115,18 +115,36 @@ fn ss() -> Vec<String> {
         .collect()
 }
 
-pub struct Vector {
+pub struct Vector2 {
     x: u64,
     y: u64,
 }
 
+impl Vector2 {
+    pub fn x(&self) -> u64 { self.x }
+    pub fn y(&self) -> u64 { self.y }
+}
+
+pub struct Vector3 {
+    x: u64,
+    y: u64,
+    z: u64,
+}
+
+impl Vector3 {
+    pub fn x(&self) -> u64 { self.x }
+    pub fn y(&self) -> u64 { self.y }
+    pub fn z(&self) -> u64 { self.z }
+}
+
 pub enum Shape {
-    Circle(u64),
-    Square(Vector),
+    Square(Vector2),
+    Cube(Vector3),
+    None
 }
 
 fn f() -> Shape {
-    Shape::Square(Vector { x: 0, y: 5 })
+    Shape::Square(Vector2 { x: 0, y: 5 })
 }
 
 fn g() -> (u32, u64) {

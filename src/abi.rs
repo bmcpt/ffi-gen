@@ -502,7 +502,7 @@ impl Interface {
             },
             Type::Ident(ident) => {
                 if self.is_object(ident) {
-                    AbiType::RefObject(ident.clone())
+                    AbiType::Object(ident.clone())
                 } else if self.is_enum(ident) {
                     AbiType::RefEnum(ident.clone())
                 } else {

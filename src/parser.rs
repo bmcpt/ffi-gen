@@ -3,6 +3,7 @@ use pest::iterators::Pair;
 use pest::Parser;
 use pest_derive::Parser;
 use std::collections::HashSet;
+use crate::AbiType;
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"]
@@ -188,7 +189,12 @@ impl EnumEntry {
                     for pair in pair.into_inner() {
                         match pair.as_rule() {
                             Rule::type_ => {
-                                inner = Some(Type::parse(pair)?);
+                                let wrapped = Type::parse(pair)?;
+                                if let Type::Ident(_) = &wrapped {
+                                    inner = Some(wrapped);
+                                } else {
+                                    unimplemented!("Enums can only wrap objects")
+                                }
                             }
                             _ => {}
                         }

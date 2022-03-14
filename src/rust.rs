@@ -144,6 +144,12 @@ impl RustGenerator {
             pub extern "C" fn drop_box_Leak(_: i64, boxed: i64) {
             }
 
+            #[repr(C)]
+            pub struct EnumWrapper {
+                tag: u32,
+                inner: *mut c_void,
+            }
+
             #[repr(transparent)]
             pub struct FfiIter<T: Send + 'static>(Box<dyn Iterator<Item = T> + Send + 'static>);
 
@@ -298,18 +304,19 @@ impl RustGenerator {
         let parts_struct_name = format!("{}_Wrapper", e.ident);
         let mut entry_index = -1;
         quote!(
-            pub struct #(&parts_struct_name) {
-                tag: u32,
-                inner: *mut c_void,
-            }
-
             #[no_mangle]
-            pub unsafe fn #(&destructure_function_name)(ptr: *mut c_void) -> #(&parts_struct_name) {
+            pub unsafe fn #(&destructure_function_name)(ptr: *mut c_void) -> EnumWrapper {
                 let e = Box::from_raw(ptr as *mut #(&e.ident));
                 let (tag, inner) = match *e {
-                    #(for sub in &e.entries => #(&e.ident)::#(&sub.name)(inner) => (#({ entry_index += 1; entry_index }), Box::into_raw(Box::new(inner)) as _),)#<push>
+                    #(for sub in &e.entries => #(&e.ident)::#(&sub.name)
+                        #(if sub.inner.is_some() { (inner) }) =>
+                            (
+                                #({ entry_index += 1; entry_index }),
+                                #(if sub.inner.is_some() { Box::into_raw(Box::new(inner)) as _ } else { 0 as _ }),
+                            ),
+                    )
                 };
-                #(&parts_struct_name) {
+                EnumWrapper {
                     tag,
                     inner,
                 }
