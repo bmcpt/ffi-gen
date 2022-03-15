@@ -3,7 +3,7 @@ use crate::{Abi, AbiFunction, AbiObject, AbiType, FunctionType, Interface, NumTy
 use genco::prelude::*;
 use genco::tokens::static_literal;
 use heck::*;
-use crate::parser::{Enum, EnumEntry, Type};
+use crate::parser::{Enum, Type};
 
 pub struct DartGenerator {
     abi: Abi,
@@ -998,6 +998,7 @@ pub mod test_runner {
         let iface = Interface::parse(iface)?;
         let (mut rust_file, rust_file_path) = NamedTempFile::new()?.keep()?;
         writeln!(rust_file, "#![feature(vec_into_raw_parts)]")?;
+        writeln!(rust_file, "#![feature(once_cell)]")?;
         let rust_gen = RustGenerator::new(Abi::native());
         let rust_tokens = rust_gen.generate(iface.clone());
         let (mut dart_file, dart_file_path) = NamedTempFile::new()?.keep()?;

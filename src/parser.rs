@@ -3,7 +3,6 @@ use pest::iterators::Pair;
 use pest::Parser;
 use pest_derive::Parser;
 use std::collections::HashSet;
-use crate::AbiType;
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"]
@@ -369,6 +368,7 @@ mod tests {
             res,
             Interface {
                 doc: Default::default(),
+                enums: vec![],
                 objects: vec![],
                 functions: vec![],
                 idents: Default::default(),
@@ -379,6 +379,7 @@ mod tests {
             res,
             Interface {
                 doc: Default::default(),
+                enums: vec![],
                 objects: vec![],
                 functions: vec![Function {
                     doc: Default::default(),
@@ -395,6 +396,7 @@ mod tests {
             res,
             Interface {
                 doc: Default::default(),
+                enums: vec![],
                 objects: vec![],
                 functions: vec![Function {
                     doc: Default::default(),
@@ -411,6 +413,7 @@ mod tests {
             res,
             Interface {
                 doc: Default::default(),
+                enums: vec![],
                 objects: vec![],
                 functions: vec![Function {
                     doc: Default::default(),
@@ -427,6 +430,7 @@ mod tests {
             res,
             Interface {
                 doc: Default::default(),
+                enums: vec![],
                 objects: vec![],
                 functions: vec![Function {
                     doc: Default::default(),
@@ -443,6 +447,7 @@ mod tests {
             res,
             Interface {
                 doc: Default::default(),
+                enums: vec![],
                 objects: vec![],
                 functions: vec![Function {
                     doc: Default::default(),
@@ -462,6 +467,7 @@ mod tests {
             res,
             Interface {
                 doc: Default::default(),
+                enums: vec![],
                 objects: vec![],
                 functions: vec![Function {
                     doc: Default::default(),
@@ -497,6 +503,7 @@ mod tests {
                     "read our beautiful docs".to_string(),
                     "here".to_string(),
                 ],
+                enums: vec![],
                 functions: vec![],
                 objects: vec![Object {
                     doc: vec!["The main entry point of this example.".to_string()],
@@ -533,6 +540,7 @@ mod tests {
             res,
             Interface {
                 doc: Default::default(),
+                enums: vec![],
                 functions: vec![
                     Function {
                         doc: Default::default(),

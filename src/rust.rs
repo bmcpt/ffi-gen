@@ -301,7 +301,6 @@ impl RustGenerator {
     fn generate_enum_helpers(&self, e: &Enum) -> rust::Tokens {
         let destructure_function_name = format!("destructure_enum_{}", e.ident);
         let drop_function_name = format!("drop_box_{}", e.ident);
-        let parts_struct_name = format!("{}_Wrapper", e.ident);
         let mut entry_index = -1;
         quote!(
             #[no_mangle]
@@ -675,12 +674,6 @@ impl RustGenerator {
             Instr::AssertType(var, ty) => {
                 quote!(let #(self.var(var))_type_test: &#ty = &#(self.var(var));)
             },
-            Instr::ExtractEnumTag(ty, in_, out) => {
-                quote!(let #(self.var(out)) = #(format!("enum_tag_{}", ty))(&#(self.var(in_)));)
-            }
-            Instr::LiftRefEnum => {
-                quote!()
-            }
         }
     }
 
@@ -771,6 +764,7 @@ pub mod test_runner {
         let res = tokens.to_file_string()?;
         let mut tmp = NamedTempFile::new()?;
         writeln!(tmp, "#![feature(vec_into_raw_parts)]")?;
+        writeln!(tmp, "#![feature(once_cell)]")?;
         tmp.write_all(res.as_bytes())?;
         //println!("{}", res);
         let test = TestCases::new();

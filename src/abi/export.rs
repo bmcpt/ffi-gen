@@ -307,7 +307,7 @@ impl Abi {
                 ffi_rets.push(ptr.clone());
                 instr.push(Instr::LowerObject(ret, ptr));
             }
-            AbiType::RefEnum(ty) => {
+            AbiType::RefEnum(_ty) => {
                 let ptr = gen.gen_num(self.iptr());
                 ffi_rets.push(ptr.clone());
                 instr.push(Instr::LowerObject(ret.clone(), ptr.clone()))
@@ -426,6 +426,4 @@ pub enum Instr {
     CallAbi(FunctionType, Option<Var>, String, Option<Var>, Vec<Var>),
     DefineRets(Vec<Var>),
     AssertType(Var, String),
-    ExtractEnumTag(String, Var, Var),
-    LiftRefEnum,
 }
