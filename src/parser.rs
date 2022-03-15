@@ -65,9 +65,10 @@ impl Interface {
     }
 
     pub fn is_enum(&self, name: &str) -> bool {
-        self.enums.iter().map(|e| e.ident.as_str())
-            .filter(|&n| n == name)
-            .next().is_some()
+        self.enums
+            .iter()
+            .map(|e| e.ident.as_str())
+            .any(|n| n == name)
     }
 }
 
@@ -186,6 +187,7 @@ impl EnumEntry {
                 }
                 Rule::enum_inner => {
                     for pair in pair.into_inner() {
+                        #[allow(clippy::single_match)]
                         match pair.as_rule() {
                             Rule::type_ => {
                                 let wrapped = Type::parse(pair)?;

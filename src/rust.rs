@@ -1,10 +1,10 @@
 use crate::export::Instr;
+use crate::parser::Enum;
 use crate::{
     Abi, AbiFunction, AbiFuture, AbiIter, AbiObject, AbiStream, AbiType, FunctionType, Interface,
     NumType, Return, Var,
 };
 use genco::prelude::*;
-use crate::parser::Enum;
 
 pub struct RustGenerator {
     abi: Abi,
@@ -673,7 +673,7 @@ impl RustGenerator {
             },
             Instr::AssertType(var, ty) => {
                 quote!(let #(self.var(var))_type_test: &#ty = &#(self.var(var));)
-            },
+            }
         }
     }
 

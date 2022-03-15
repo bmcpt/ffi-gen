@@ -122,8 +122,12 @@ pub struct Vector2 {
 }
 
 impl Vector2 {
-    pub fn x(&self) -> u64 { self.x }
-    pub fn y(&self) -> u64 { self.y }
+    pub fn x(&self) -> u64 {
+        self.x
+    }
+    pub fn y(&self) -> u64 {
+        self.y
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -134,16 +138,22 @@ pub struct Vector3 {
 }
 
 impl Vector3 {
-    pub fn x(&self) -> u64 { self.x }
-    pub fn y(&self) -> u64 { self.y }
-    pub fn z(&self) -> u64 { self.z }
+    pub fn x(&self) -> u64 {
+        self.x
+    }
+    pub fn y(&self) -> u64 {
+        self.y
+    }
+    pub fn z(&self) -> u64 {
+        self.z
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
 pub enum Shape {
     Square(Vector2),
     Cube(Vector3),
-    None
+    None,
 }
 
 fn get_shape() -> Shape {

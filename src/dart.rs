@@ -1,9 +1,9 @@
 use crate::import::{Import, Instr};
+use crate::parser::{Enum, Type};
 use crate::{Abi, AbiFunction, AbiObject, AbiType, FunctionType, Interface, NumType, Return, Var};
 use genco::prelude::*;
 use genco::tokens::static_literal;
 use heck::*;
-use crate::parser::{Enum, Type};
 
 pub struct DartGenerator {
     abi: Abi,
