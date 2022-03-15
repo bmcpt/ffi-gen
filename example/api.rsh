@@ -15,6 +15,6 @@ enum Shape {
     None
 }
 
-fn f() -> Shape;
+fn get_shape() -> Shape;
 
-fn g() -> Vector2;
+fn get_shapes() -> Vec<Shape>;

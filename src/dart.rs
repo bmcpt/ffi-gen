@@ -432,7 +432,7 @@ impl DartGenerator {
                         switch (parts.tag) {
                             #(for entry in e.entries.iter() => case #({ destructure_switch_index += 1; destructure_switch_index }):#<push>
                                 this._tag = #(&enum_tag_name).#(&entry.name);#<push>
-                                this._box.move();
+                                // this._box.move();
                                 #(if entry.inner.is_some() {
                                     #({
                                         let inner_name = if let Type::Ident(name) = entry.inner.as_ref().unwrap() { name } else { unimplemented!("Enums can only wrap objects") };

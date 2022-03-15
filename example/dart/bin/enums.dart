@@ -3,7 +3,13 @@ import '../lib/bindings.dart';
 
 void main() async {
   final api = Api.load();
-  final shape = api.f();
+  printShape(api.getShape());
+  final shapes = api.getShapes();
+  print(shapes.length);
+  shapes.forEach(printShape);
+}
+
+void printShape(Shape shape) {
   switch (shape.tag) {
     case ShapeTag.Square:
       final size = shape.inner as Vector2;
@@ -12,6 +18,9 @@ void main() async {
     case ShapeTag.Cube:
       final size = shape.inner as Vector3;
       print("Cube(${size.x()}, ${size.y()}, ${size.z()})");
+      break;
+    case ShapeTag.None:
+      print("None");
       break;
   }
 }

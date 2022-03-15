@@ -306,7 +306,7 @@ impl RustGenerator {
         quote!(
             #[no_mangle]
             pub unsafe fn #(&destructure_function_name)(ptr: *mut c_void) -> EnumWrapper {
-                let e = Box::from_raw(ptr as *mut #(&e.ident));
+                let e = &*(ptr as *mut #(&e.ident)).clone();
                 let (tag, inner) = match *e {
                     #(for sub in &e.entries => #(&e.ident)::#(&sub.name)
                         #(if sub.inner.is_some() { (inner) }) =>

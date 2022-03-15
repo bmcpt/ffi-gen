@@ -115,6 +115,7 @@ fn ss() -> Vec<String> {
         .collect()
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct Vector2 {
     x: u64,
     y: u64,
@@ -125,6 +126,7 @@ impl Vector2 {
     pub fn y(&self) -> u64 { self.y }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct Vector3 {
     x: u64,
     y: u64,
@@ -137,16 +139,27 @@ impl Vector3 {
     pub fn z(&self) -> u64 { self.z }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum Shape {
     Square(Vector2),
     Cube(Vector3),
     None
 }
 
-fn f() -> Shape {
+fn get_shape() -> Shape {
     Shape::Square(Vector2 { x: 0, y: 5 })
 }
 
-fn g() -> (u32, u64) {
-    (6, 8)
+fn get_shapes() -> Vec<Shape> {
+    use Shape::*;
+    vec![
+        Square(Vector2 { x: 5, y: 3 }),
+        None,
+        Cube(Vector3 { x: 4, y: 0, z: 1 }),
+        Square(Vector2 { x: 5, y: 3 }),
+        None,
+        None,
+        Square(Vector2 { x: 5, y: 3 }),
+        Cube(Vector3 { x: 4, y: 0, z: 1 }),
+    ]
 }
