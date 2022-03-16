@@ -370,6 +370,33 @@ impl RustGenerator {
                     result as _
                 })
             }
+
+            #[no_mangle]
+            pub extern "C" fn #(format!("__{}Remove", name))(boxed: usize, index: u32) -> usize {
+                panic_abort(move || unsafe {
+                    let mut list = &mut *(boxed as *mut Vec<#ty>);
+                    let el = Box::new(list.remove(index as _));
+                    Box::into_raw(el) as _
+                })
+            }
+
+            #[no_mangle]
+            pub extern "C" fn #(format!("__{}Add", name))(boxed: usize, element: usize) {
+                panic_abort(move || unsafe {
+                    let mut list = &mut *(boxed as *mut Vec<#ty>);
+                    let el = Box::<#ty>::from_raw(element as _);
+                    list.push(*el);
+                })
+            }
+
+            #[no_mangle]
+            pub extern "C" fn #(format!("__{}Insert", name))(boxed: usize, index: u32, element: usize) {
+                panic_abort(move || unsafe {
+                    let mut list = &mut *(boxed as *mut Vec<#ty>);
+                    let el = Box::<#ty>::from_raw(element as _);
+                    list.insert(index as _, *el);
+                })
+            }
         )
     }
 

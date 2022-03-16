@@ -498,6 +498,27 @@ impl DartGenerator {
 
             late final #(format!("_ffiList{}ElementAt", ty)) = #(format!("_ffiList{}ElementAtPtr", ty)).asFunction<
                 int Function(int, int)>();
+
+            late final #(format!("_ffiList{}RemovePtr", ty)) = _lookup<
+                ffi.NativeFunction<
+                    ffi.IntPtr Function(ffi.IntPtr, ffi.Uint32)>>(#(format!("\"__{}Remove\"", list_name)));
+
+            late final #(format!("_ffiList{}Remove", ty)) = #(format!("_ffiList{}RemovePtr", ty)).asFunction<
+                int Function(int, int)>();
+
+            late final #(format!("_ffiList{}AddPtr", ty)) = _lookup<
+                ffi.NativeFunction<
+                    ffi.Void Function(ffi.IntPtr, ffi.IntPtr)>>(#(format!("\"__{}Add\"", list_name)));
+
+            late final #(format!("_ffiList{}Add", ty)) = #(format!("_ffiList{}AddPtr", ty)).asFunction<
+                void Function(int, int)>();
+
+            late final #(format!("_ffiList{}InsertPtr", ty)) = _lookup<
+                ffi.NativeFunction<
+                    ffi.Void Function(ffi.IntPtr, ffi.Uint32, ffi.IntPtr)>>(#(format!("\"__{}Insert\"", list_name)));
+
+            late final #(format!("_ffiList{}Insert", ty)) = #(format!("_ffiList{}InsertPtr", ty)).asFunction<
+                void Function(int, int, int)>();
         )
     }
 
@@ -529,6 +550,28 @@ impl DartGenerator {
 
                 #ty operator[](int index) {
                   return elementAt(index);
+                }
+
+                #(static_literal("///")) Moves the element out of this list and returns it
+                #ty remove(int index) {
+                    final address = _api.#(format!("_ffiList{}Remove", ty))(_box.borrow(), index);
+                    final reference = _Box(_api, ffi.Pointer.fromAddress(address), #_(#(format!("drop_box_{}", ty))));
+                    reference._finalizer = _api._registerFinalizer(reference);
+                    return #ty._(_api, reference);
+                }
+
+                #(static_literal("///"))The inserted element is moved into the list and must not be used again
+                #(static_literal("///"))Although you can use the "elementAt" method to get a reference to the added element
+                void add(#ty element) {
+                    _api.#(format!("_ffiList{}Add", ty))(_box.borrow(), element._box.borrow());
+                    element._box.move();
+                }
+
+                #(static_literal("///"))The inserted element is moved into the list and must not be used again
+                #(static_literal("///"))Although you can use the "elementAt" method to get a reference to the added element
+                void insert(int index, #ty element) {
+                    _api.#(format!("_ffiList{}Insert", ty))(_box.borrow(), index, element._box.borrow());
+                    element._box.move();
                 }
 
                 void drop() {
