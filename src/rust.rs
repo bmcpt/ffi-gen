@@ -29,6 +29,7 @@ impl RustGenerator {
         #[allow(unused)]
         pub mod api {
             #![allow(clippy::all)]
+            #![allow(warnings)]
             use core::future::Future;
             use core::mem::ManuallyDrop;
             use core::pin::Pin;
@@ -765,8 +766,8 @@ pub mod test_runner {
         let mut tmp = NamedTempFile::new()?;
         writeln!(tmp, "#![feature(vec_into_raw_parts)]")?;
         writeln!(tmp, "#![feature(once_cell)]")?;
+        writeln!(tmp, "#![allow(warnings)]")?;
         tmp.write_all(res.as_bytes())?;
-        //println!("{}", res);
         let test = TestCases::new();
         test.pass(tmp.as_ref());
         Ok(())

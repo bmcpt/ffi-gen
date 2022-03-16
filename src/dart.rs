@@ -425,32 +425,41 @@ impl DartGenerator {
                 #(&enum_tag_name)? _tag;
                 Object? _inner;
 
-                Object? get inner => _inner;
+                void destructureSelf() {
+                    final parts = this._api.#(&destructure_function_name)(this._box.borrow());
+                    switch (parts.tag) {
+                        #(for entry in e.entries.iter() => case #({ destructure_switch_index += 1; destructure_switch_index }):#<push>
+                            this._tag = #(&enum_tag_name).#(&entry.name);#<push>
+                            // this._box.move();
+                            #(if entry.inner.is_some() {
+                                #({
+                                    let inner_name = if let Type::Ident(name) = entry.inner.as_ref().unwrap() { name } else { unimplemented!("Enums can only wrap objects") };
+                                    quote!(
+                                        final ffi.Pointer<ffi.Void> innerPtr = ffi.Pointer.fromAddress(parts.inner);
+                                        final innerBox = _Box(this._api, innerPtr, #_(#(format!("drop_box_{}", inner_name))));
+                                        innerBox._finalizer = this._api._registerFinalizer(innerBox);
+                                        this._inner = #(inner_name)._(this._api, innerBox);
+                                    )
+                                })
+                            } else {})
+                            break;#<push>
+                        )
+                        default:#<push>
+                            throw new StateError(#(format!("\"Destructuring enum gave back an invalid tag: ${{parts.tag}}\"")));
+                    }
+                }
+
+                Object? get inner {
+                    if (_inner == null) {
+                        destructureSelf();
+                    }
+                    return _inner;
+                }
                 #(&enum_tag_name) get tag {
                     if (_tag == null) {
-                        final parts = this._api.#(&destructure_function_name)(this._box.borrow());
-                        switch (parts.tag) {
-                            #(for entry in e.entries.iter() => case #({ destructure_switch_index += 1; destructure_switch_index }):#<push>
-                                this._tag = #(&enum_tag_name).#(&entry.name);#<push>
-                                // this._box.move();
-                                #(if entry.inner.is_some() {
-                                    #({
-                                        let inner_name = if let Type::Ident(name) = entry.inner.as_ref().unwrap() { name } else { unimplemented!("Enums can only wrap objects") };
-                                        quote!(
-                                            final ffi.Pointer<ffi.Void> innerPtr = ffi.Pointer.fromAddress(parts.inner);
-                                            final innerBox = _Box(this._api, innerPtr, #_(#(format!("drop_box_{}", inner_name))));
-                                            innerBox._finalizer = this._api._registerFinalizer(innerBox);
-                                            this._inner = #(inner_name)._(this._api, innerBox);
-                                        )
-                                    })
-                                } else {})
-                                break;#<push>
-                            )
-                            default:#<push>
-                                throw new StateError(#(format!("\"Destructuring enum gave back an invalid tag: ${{parts.tag}}\"")));
-                        }
+                        destructureSelf();
                     }
-                    return this._tag!;
+                    return _tag!;
                 }
 
                 #(&e.ident)._(this._api, this._box);

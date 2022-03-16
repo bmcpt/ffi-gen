@@ -569,3 +569,110 @@ compile_pass_no_js! {
         assert(img1.equals(img2.asTypedList()));
     )
 }
+
+compile_pass_no_js! {
+    enums,
+    "
+object Vector2 {
+    fn x() -> u64;
+    fn y() -> u64;
+}
+
+object Vector3 {
+    fn x() -> u64;
+    fn y() -> u64;
+    fn z() -> u64;
+}
+
+enum Shape {
+    Square(Vector2),
+    Cube(Vector3),
+    None
+}
+
+fn get_shape() -> Shape;
+
+fn get_shapes() -> Vec<Shape>;
+    ",
+    (
+        #[derive(Debug, Clone, Copy)]
+        pub struct Vector2 {
+            x: u64,
+            y: u64,
+        }
+
+        impl Vector2 {
+            pub fn x(&self) -> u64 {
+                self.x
+            }
+            pub fn y(&self) -> u64 {
+                self.y
+            }
+        }
+
+        #[derive(Debug, Clone, Copy)]
+        pub struct Vector3 {
+            x: u64,
+            y: u64,
+            z: u64,
+        }
+
+        impl Vector3 {
+            pub fn x(&self) -> u64 {
+                self.x
+            }
+            pub fn y(&self) -> u64 {
+                self.y
+            }
+            pub fn z(&self) -> u64 {
+                self.z
+            }
+        }
+
+        #[derive(Debug, Clone, Copy)]
+        pub enum Shape {
+            Square(Vector2),
+            Cube(Vector3),
+            None,
+        }
+
+        fn get_shape() -> Shape {
+            Shape::Square(Vector2 { x: 0, y: 5 })
+        }
+
+        fn get_shapes() -> Vec<Shape> {
+            use Shape::*;
+            vec![
+                Square(Vector2 { x: 5, y: 3 }),
+                None,
+                Cube(Vector3 { x: 4, y: 0, z: 1 }),
+                Square(Vector2 { x: 5, y: 3 }),
+                None,
+                None,
+                Square(Vector2 { x: 5, y: 3 }),
+                Cube(Vector3 { x: 4, y: 0, z: 1 }),
+            ]
+        }
+    ),
+    (),
+    (
+        final shapes = api.getShapes();
+        assert(shapes.length == 8);
+
+        assert(shapes.elementAt(0).tag == ShapeTag.Square);
+        assert(shapes.elementAt(0).inner.runtimeType == Vector2, shapes.elementAt(0).inner.runtimeType);
+        var s2 = shapes.elementAt(0).inner as Vector2;
+        assert(s2.x() == 5);
+        assert(s2.y() == 3);
+
+        assert(shapes.elementAt(1).tag == ShapeTag.None);
+        assert(shapes.elementAt(1).inner == null, shapes.elementAt(1).inner);
+
+        assert(shapes.elementAt(2).tag == ShapeTag.Cube);
+        assert(shapes.elementAt(2).inner.runtimeType == Vector3, shapes.elementAt(2).inner.runtimeType);
+        var s3 = shapes.elementAt(2).inner as Vector3;
+        assert(s3.x() == 4);
+        assert(s3.y() == 0);
+        assert(s3.z() == 1);
+    )
+}
