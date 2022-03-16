@@ -29,6 +29,8 @@ object CustomType {
     fn get_n() -> i32;
 }
 
+fn create_custom_type(n: i32) -> CustomType;
+
 fn s() -> string;
 
 fn ss() -> Vec<string>;

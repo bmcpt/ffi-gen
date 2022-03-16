@@ -569,3 +569,190 @@ compile_pass_no_js! {
         assert(img1.equals(img2.asTypedList()));
     )
 }
+
+compile_pass_no_js! {
+    enums,
+    "
+object Vector2 {
+    fn x() -> u64;
+    fn y() -> u64;
+}
+
+object Vector3 {
+    fn x() -> u64;
+    fn y() -> u64;
+    fn z() -> u64;
+}
+
+enum Shape {
+    Square(Vector2),
+    Cube(Vector3),
+    None
+}
+
+fn get_shape() -> Shape;
+
+fn get_shapes() -> Vec<Shape>;
+    ",
+    (
+        #[derive(Debug, Clone, Copy)]
+        pub struct Vector2 {
+            x: u64,
+            y: u64,
+        }
+
+        impl Vector2 {
+            pub fn x(&self) -> u64 {
+                self.x
+            }
+            pub fn y(&self) -> u64 {
+                self.y
+            }
+        }
+
+        #[derive(Debug, Clone, Copy)]
+        pub struct Vector3 {
+            x: u64,
+            y: u64,
+            z: u64,
+        }
+
+        impl Vector3 {
+            pub fn x(&self) -> u64 {
+                self.x
+            }
+            pub fn y(&self) -> u64 {
+                self.y
+            }
+            pub fn z(&self) -> u64 {
+                self.z
+            }
+        }
+
+        #[derive(Debug, Clone, Copy)]
+        pub enum Shape {
+            Square(Vector2),
+            Cube(Vector3),
+            None,
+        }
+
+        fn get_shape() -> Shape {
+            Shape::Square(Vector2 { x: 0, y: 5 })
+        }
+
+        fn get_shapes() -> Vec<Shape> {
+            use Shape::*;
+            vec![
+                Square(Vector2 { x: 5, y: 3 }),
+                None,
+                Cube(Vector3 { x: 4, y: 0, z: 1 }),
+                Square(Vector2 { x: 5, y: 3 }),
+                None,
+                None,
+                Square(Vector2 { x: 5, y: 3 }),
+                Cube(Vector3 { x: 4, y: 0, z: 1 }),
+            ]
+        }
+    ),
+    (),
+    (
+        final shapes = api.getShapes();
+        assert(shapes.length == 8);
+
+        assert(shapes.elementAt(0).tag == ShapeTag.Square);
+        assert(shapes.elementAt(0).inner.runtimeType == Vector2, shapes.elementAt(0).inner.runtimeType);
+        var s2 = shapes.elementAt(0).inner as Vector2;
+        assert(s2.x() == 5);
+        assert(s2.y() == 3);
+
+        assert(shapes.elementAt(1).tag == ShapeTag.None);
+        assert(shapes.elementAt(1).inner == null, shapes.elementAt(1).inner);
+
+        assert(shapes.elementAt(2).tag == ShapeTag.Cube);
+        assert(shapes.elementAt(2).inner.runtimeType == Vector3, shapes.elementAt(2).inner.runtimeType);
+        var s3 = shapes.elementAt(2).inner as Vector3;
+        assert(s3.x() == 4);
+        assert(s3.y() == 0);
+        assert(s3.z() == 1);
+    )
+}
+
+compile_pass_no_js! {
+    future_vec_string,
+    "\
+    fn strings() -> Future<Vec<string>>;
+    ",
+    (
+        async fn strings() -> Vec<String> {
+            vec![
+                "a",
+                "b",
+                "c",
+            ].iter().map(|s| s.to_string()).collect()
+        }
+    ),
+    (),
+    (
+        final strings = await api.strings();
+        print(strings);
+        assert(strings.length == 3);
+        assert(strings[0].toDartString() == "a");
+        assert(strings[1].toDartString() == "b");
+        assert(strings[2].toDartString() == "c");
+    )
+}
+
+compile_pass_no_js! {
+    ffilist_modification,
+    "
+    fn create_list(n: usize) -> Future<Vec<CustomType>>;
+
+    fn sum_list(l: Vec<CustomType>) -> u32;
+
+    object CustomType {
+        fn get_n() -> usize;
+    }
+
+    fn create_custom_type(n: usize) -> CustomType;
+    ",
+    (
+        #[derive(Debug)]
+        pub struct CustomType {
+            n: usize,
+        }
+
+        impl CustomType {
+            fn get_n(&self) -> usize {
+                self.n
+            }
+        }
+
+        pub fn create_custom_type(n: usize) -> CustomType {
+            CustomType { n }
+        }
+
+        async fn create_list(n: usize) -> Vec<CustomType> {
+            (0..n)
+                .map(|n| CustomType { n })
+                .collect()
+        }
+
+        fn sum_list(l: &[CustomType]) -> usize {
+            l.iter().map(|e| e.n).sum()
+        }
+    ),
+    (),
+    (
+        final list = await api.createList(5);
+        final el = list.remove(2);
+        list.insert(0, el);
+        list.add(api.createCustomType(30));
+
+        assert(list.length == 6);
+        final expected = [2, 0, 1, 3, 4, 30];
+        for (int i=0; i<6; i++) {
+            assert(expected[i] == list[i].getN());
+        }
+        assert(api.sumList(list) == 40);
+    )
+}

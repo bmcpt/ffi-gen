@@ -29,6 +29,7 @@ impl RustGenerator {
         #[allow(unused)]
         pub mod api {
             #![allow(clippy::all)]
+            #![allow(warnings)]
             use core::future::Future;
             use core::mem::ManuallyDrop;
             use core::pin::Pin;
@@ -367,6 +368,33 @@ impl RustGenerator {
                     let result = list.get(index as usize).unwrap() as *const _;
                     Box::into_raw(list);
                     result as _
+                })
+            }
+
+            #[no_mangle]
+            pub extern "C" fn #(format!("__{}Remove", name))(boxed: usize, index: u32) -> usize {
+                panic_abort(move || unsafe {
+                    let mut list = &mut *(boxed as *mut Vec<#ty>);
+                    let el = Box::new(list.remove(index as _));
+                    Box::into_raw(el) as _
+                })
+            }
+
+            #[no_mangle]
+            pub extern "C" fn #(format!("__{}Add", name))(boxed: usize, element: usize) {
+                panic_abort(move || unsafe {
+                    let mut list = &mut *(boxed as *mut Vec<#ty>);
+                    let el = Box::<#ty>::from_raw(element as _);
+                    list.push(*el);
+                })
+            }
+
+            #[no_mangle]
+            pub extern "C" fn #(format!("__{}Insert", name))(boxed: usize, index: u32, element: usize) {
+                panic_abort(move || unsafe {
+                    let mut list = &mut *(boxed as *mut Vec<#ty>);
+                    let el = Box::<#ty>::from_raw(element as _);
+                    list.insert(index as _, *el);
                 })
             }
         )
@@ -765,8 +793,8 @@ pub mod test_runner {
         let mut tmp = NamedTempFile::new()?;
         writeln!(tmp, "#![feature(vec_into_raw_parts)]")?;
         writeln!(tmp, "#![feature(once_cell)]")?;
+        writeln!(tmp, "#![allow(warnings)]")?;
         tmp.write_all(res.as_bytes())?;
-        //println!("{}", res);
         let test = TestCases::new();
         test.pass(tmp.as_ref());
         Ok(())

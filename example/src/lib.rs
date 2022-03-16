@@ -80,7 +80,7 @@ pub async fn async_hello_world() -> Result<u8> {
 }
 
 #[derive(Debug)]
-struct CustomType {
+pub struct CustomType {
     n: i32,
 }
 
@@ -88,6 +88,10 @@ impl CustomType {
     fn get_n(&self) -> i32 {
         self.n
     }
+}
+
+pub fn create_custom_type(n: i32) -> CustomType {
+    CustomType { n }
 }
 
 fn create_list() -> Vec<CustomType> {

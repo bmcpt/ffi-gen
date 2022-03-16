@@ -425,32 +425,44 @@ impl DartGenerator {
                 #(&enum_tag_name)? _tag;
                 Object? _inner;
 
-                Object? get inner => _inner;
+                void destructureSelf() {
+                    final parts = this._api.#(&destructure_function_name)(this._box.borrow());
+                    switch (parts.tag) {
+                        #(for entry in e.entries.iter() => case #({ destructure_switch_index += 1; destructure_switch_index }):#<push>
+                            this._tag = #(&enum_tag_name).#(&entry.name);#<push>
+                            // this._box.move();
+                            #(if entry.inner.is_some() {
+                                #({
+                                    let inner_name = if let Type::Ident(name) = entry.inner.as_ref().unwrap() { name } else { unimplemented!("Enums can only wrap objects") };
+                                    quote!(
+                                        final ffi.Pointer<ffi.Void> innerPtr = ffi.Pointer.fromAddress(parts.inner);
+                                        final innerBox = _Box(this._api, innerPtr, #_(#(format!("drop_box_{}", inner_name))));
+                                        innerBox._finalizer = this._api._registerFinalizer(innerBox);
+                                        this._inner = #(inner_name)._(this._api, innerBox);
+                                    )
+                                })
+                            } else {})
+                            break;#<push>
+                        )
+                        default:#<push>
+                            throw new StateError(#(format!("\"Destructuring enum gave back an invalid tag: ${{parts.tag}}\"")));
+                    }
+                }
+
+                #(static_literal("///")) The tag of this enum object
                 #(&enum_tag_name) get tag {
                     if (_tag == null) {
-                        final parts = this._api.#(&destructure_function_name)(this._box.borrow());
-                        switch (parts.tag) {
-                            #(for entry in e.entries.iter() => case #({ destructure_switch_index += 1; destructure_switch_index }):#<push>
-                                this._tag = #(&enum_tag_name).#(&entry.name);#<push>
-                                // this._box.move();
-                                #(if entry.inner.is_some() {
-                                    #({
-                                        let inner_name = if let Type::Ident(name) = entry.inner.as_ref().unwrap() { name } else { unimplemented!("Enums can only wrap objects") };
-                                        quote!(
-                                            final ffi.Pointer<ffi.Void> innerPtr = ffi.Pointer.fromAddress(parts.inner);
-                                            final innerBox = _Box(this._api, innerPtr, #_(#(format!("drop_box_{}", inner_name))));
-                                            innerBox._finalizer = this._api._registerFinalizer(innerBox);
-                                            this._inner = #(inner_name)._(this._api, innerBox);
-                                        )
-                                    })
-                                } else {})
-                                break;#<push>
-                            )
-                            default:#<push>
-                                throw new StateError(#(format!("\"Destructuring enum gave back an invalid tag: ${{parts.tag}}\"")));
-                        }
+                        destructureSelf();
                     }
-                    return this._tag!;
+                    return _tag!;
+                }
+                #(static_literal("///")) The data contained inside this enum object. You will need
+                #(static_literal("///")) to cast it to the correct type based on the value of tag
+                Object? get inner {
+                    if (_inner == null) {
+                        destructureSelf();
+                    }
+                    return _inner;
                 }
 
                 #(&e.ident)._(this._api, this._box);
@@ -489,6 +501,27 @@ impl DartGenerator {
 
             late final #(format!("_ffiList{}ElementAt", ty)) = #(format!("_ffiList{}ElementAtPtr", ty)).asFunction<
                 int Function(int, int)>();
+
+            late final #(format!("_ffiList{}RemovePtr", ty)) = _lookup<
+                ffi.NativeFunction<
+                    ffi.IntPtr Function(ffi.IntPtr, ffi.Uint32)>>(#(format!("\"__{}Remove\"", list_name)));
+
+            late final #(format!("_ffiList{}Remove", ty)) = #(format!("_ffiList{}RemovePtr", ty)).asFunction<
+                int Function(int, int)>();
+
+            late final #(format!("_ffiList{}AddPtr", ty)) = _lookup<
+                ffi.NativeFunction<
+                    ffi.Void Function(ffi.IntPtr, ffi.IntPtr)>>(#(format!("\"__{}Add\"", list_name)));
+
+            late final #(format!("_ffiList{}Add", ty)) = #(format!("_ffiList{}AddPtr", ty)).asFunction<
+                void Function(int, int)>();
+
+            late final #(format!("_ffiList{}InsertPtr", ty)) = _lookup<
+                ffi.NativeFunction<
+                    ffi.Void Function(ffi.IntPtr, ffi.Uint32, ffi.IntPtr)>>(#(format!("\"__{}Insert\"", list_name)));
+
+            late final #(format!("_ffiList{}Insert", ty)) = #(format!("_ffiList{}InsertPtr", ty)).asFunction<
+                void Function(int, int, int)>();
         )
     }
 
@@ -520,6 +553,28 @@ impl DartGenerator {
 
                 #ty operator[](int index) {
                   return elementAt(index);
+                }
+
+                #(static_literal("///")) Moves the element out of this list and returns it
+                #ty remove(int index) {
+                    final address = _api.#(format!("_ffiList{}Remove", ty))(_box.borrow(), index);
+                    final reference = _Box(_api, ffi.Pointer.fromAddress(address), #_(#(format!("drop_box_{}", ty))));
+                    reference._finalizer = _api._registerFinalizer(reference);
+                    return #ty._(_api, reference);
+                }
+
+                #(static_literal("///"))The inserted element is moved into the list and must not be used again
+                #(static_literal("///"))Although you can use the "elementAt" method to get a reference to the added element
+                void add(#ty element) {
+                    _api.#(format!("_ffiList{}Add", ty))(_box.borrow(), element._box.borrow());
+                    element._box.move();
+                }
+
+                #(static_literal("///"))The inserted element is moved into the list and must not be used again
+                #(static_literal("///"))Although you can use the "elementAt" method to get a reference to the added element
+                void insert(int index, #ty element) {
+                    _api.#(format!("_ffiList{}Insert", ty))(_box.borrow(), index, element._box.borrow());
+                    element._box.move();
                 }
 
                 void drop() {
